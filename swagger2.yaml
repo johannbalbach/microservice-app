@@ -1,0 +1,834 @@
+---
+swagger: "2.0"
+info:
+  description: ""
+  version: "1.0.6"
+  title: "Swagger Petstore"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "petstore.swagger.io"
+basePath: "/v2"
+tags:
+- name: "user"
+  description: "Operations about user"
+- name: "documents"
+  description: "Operations with documents"
+- name: "university"
+  description: "Operations about university programs"
+- name: "enrollment"
+  description: "Operations with user enrollment"
+- name: "dictionary"
+  description: "Operations with dictionary/external database"
+schemes:
+- "https"
+- "http"
+paths:
+  /documents/getDocuments:
+    get:
+      tags:
+      - "documents"
+      summary: "Get user's documents"
+      description: "Allows an abiturient to get their documents"
+      operationId: "getDocuments"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserDocuments"
+  /documents/download/{id}:
+    get:
+      tags:
+      - "documents"
+      summary: "Download a document"
+      description: "Allows an abiturient to download a specific document"
+      operationId: "downloadDocument"
+      produces:
+      - "application/octet-stream"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the document to download"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "file"
+  /documents/editDocuments:
+    put:
+      tags:
+      - "documents"
+      summary: "Edit user's documents"
+      description: "Allows an abiturient to edit their documents"
+      operationId: "editDocuments"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "document"
+        in: "body"
+        description: "Updated document data"
+        required: true
+        schema:
+          $ref: "#/definitions/Document"
+  /documents/deleteScan:
+    delete:
+      tags:
+      - "documents"
+      summary: "Delete a document scan"
+      description: "Allows an abiturient to delete a scanned document"
+      operationId: "deleteScan"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "ID of the scanned document to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /documents/uploadScan:
+    post:
+      tags:
+      - "documents"
+      summary: "Upload a document scan"
+      description: "Allows an abiturient to upload a scanned document"
+      operationId: "uploadScan"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "The file to upload"
+        required: true
+        type: "file"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Document"
+  /documents/update/{id}:
+    put:
+      tags:
+      - "documents"
+      summary: "Update a document"
+      description: "Allows an abiturient to update a specific document"
+      operationId: "updateDocument"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the document to update"
+        required: true
+        type: "string"
+      - name: "document"
+        in: "body"
+        description: "Updated document data"
+        required: true
+        schema:
+          $ref: "#/definitions/Document"
+  /university/getMyPrograms:
+    get:
+      tags:
+      - "university"
+      summary: "Get list of programs"
+      description: "Get a list of my educational programs"
+      operationId: "getMyPrograms"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/getMyPrograms"
+  /university/addProgramToMyList/{id}:
+    post:
+      tags:
+      - "university"
+      summary: "Add program to my list"
+      description: "Add an educational program to the abiturient's list for enrollment"
+      operationId: "addProgramToMyList"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the program to add"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /university/changeProgramPriority/{id}:
+    put:
+      tags:
+      - "university"
+      summary: "Change program priority"
+      description: "Change the priority of an educational program in the abiturient's list"
+      operationId: "changeProgramPriority"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the program to change priority"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /university/removeProgramFromMyList/{id}:
+    delete:
+      tags:
+      - "university"
+      summary: "Remove program from my list"
+      description: "Remove an educational program from the abiturient's list for enrollment"
+      operationId: "removeProgramFromMyList"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the program to remove"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /university/getListOfPrograms:
+    get:
+      tags:
+      - "university"
+      summary: "Get list of programs"
+      description: "Get a list of educational programs available for enrollment"
+      operationId: "getListOfPrograms"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/ProgramList"
+  /enrollment/getAdmission:
+    get:
+      tags:
+      - "enrollment"
+      summary: "Get admission details"
+      description: "Get details of a specific admission"
+      operationId: "getAdmission"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "ID of the admission to retrieve"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Admission"
+  /enrollment/getListOfAdmissions:
+    get:
+      tags:
+      - "enrollment"
+      summary: "Get list of admissions"
+      description: "Get a list of admissions"
+      operationId: "getListOfAdmissions"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/AdmissionList"
+  /enrollment/rejectAdmission/{id}:
+    put:
+      tags:
+      - "enrollment"
+      summary: "Reject admission"
+      description: "Reject a specific admission"
+      operationId: "rejectAdmission"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the admission to reject"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /enrollment/assignManager/{admission_id}:
+    put:
+      tags:
+      - "enrollment"
+      summary: "Assign manager to admission"
+      description: "Assign a manager to a specific admission"
+      operationId: "assignManager"
+      parameters:
+      - name: "admission_id"
+        in: "path"
+        description: "ID of the admission to assign a manager to"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /management/getApplicant/{id}:
+    get:
+      tags:
+      - "management"
+      summary: "Get applicant details"
+      description: "Get details of a specific applicant"
+      operationId: "getApplicant"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the applicant to retrieve"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Applicant"
+  /management/editApplicant/{id}:
+    put:
+      tags:
+      - "management"
+      summary: "Edit applicant details"
+      description: "Edit details of a specific applicant"
+      operationId: "editApplicant"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the applicant to edit"
+        required: true
+        type: "string"
+      - name: "applicant"
+        in: "body"
+        description: "Updated applicant data"
+        required: true
+        schema:
+          $ref: "#/definitions/Applicant"
+      responses:
+        200:
+          description: "successful operation"
+  /management/deleteScan/{id}:
+    delete:
+      tags:
+      - "management"
+      summary: "Delete document scan"
+      description: "Delete a specific document scan"
+      operationId: "deleteScan"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the document scan to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /management/uploadScan/:
+    post:
+      tags:
+      - "management"
+      summary: "Upload a document scan"
+      description: "Upload a scanned document"
+      operationId: "uploadScan"
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "file"
+        in: "formData"
+        description: "The file to upload"
+        required: true
+        type: "file"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Document"
+  /management/editDocument/{id}:
+    put:
+      tags:
+      - "management"
+      summary: "Edit document details"
+      description: "Edit details of a specific document"
+      operationId: "editDocument"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the document to edit"
+        required: true
+        type: "string"
+      - name: "document"
+        in: "body"
+        description: "Updated document data"
+        required: true
+        schema:
+          $ref: "#/definitions/Document"
+  /management/editEnrollmentStatus/{id}:
+    put:
+      tags:
+      - "management"
+      summary: "Edit enrollment status"
+      description: "Edit the enrollment status of a specific applicant"
+      operationId: "editEnrollmentStatus"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the applicant to edit enrollment status"
+        required: true
+        type: "string"
+      - name: "status"
+        in: "query"
+        description: "New enrollment status"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+  /management/getListOfManagers:
+    get:
+      tags:
+      - "management"
+      summary: "Get list of managers"
+      description: "Get a list of managers"
+      operationId: "getListOfManagers"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/ManagerList"
+  /management/addManager:
+    post:
+      tags:
+      - "management"
+      summary: "Add a new manager"
+      description: "Add a new manager to the system"
+      operationId: "addManager"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "manager"
+        in: "body"
+        description: "New manager data"
+        required: true
+        schema:
+          $ref: "#/definitions/Manager"
+      responses:
+        200:
+          description: "successful operation"
+  /dictionary/importDictionary:
+    post:
+      tags:
+      - "dictionary"
+      summary: "Import dictionary data"
+      description: "Import data for the dictionary"
+      operationId: "importDictionary"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "data"
+        in: "body"
+        description: "Data to import"
+        required: true
+        schema:
+          $ref: "#/definitions/DictionaryData"
+      responses:
+        200:
+          description: "successful operation"
+  /dictionary/checkStatus:
+    get:
+      tags:
+      - "dictionary"
+      summary: "Check dictionary import status"
+      description: "Check the status of the dictionary import"
+      operationId: "checkDictionaryStatus"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/ImportStatus"
+  /user/createWithArray*:
+    post:
+      tags:
+      - "user"
+      summary: "Creates list of users with given input array"
+      description: ""
+      operationId: "createUsersWithArrayInput"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "List of user object"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+  /user/createWithList*:
+    post:
+      tags:
+      - "user"
+      summary: "Creates list of users with given input array"
+      description: ""
+      operationId: "createUsersWithListInput"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "List of user object"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+  /user/{username}*:
+    get:
+      tags:
+      - "user"
+      summary: "Get user by user name"
+      description: ""
+      operationId: "getUserByName"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "The name that needs to be fetched. Use user1 for testing. "
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/User"
+        400:
+          description: "Invalid username supplied"
+        404:
+          description: "User not found"
+    put:
+      tags:
+      - "user"
+      summary: "Updated user"
+      description: "This can only be done by the logged in user."
+      operationId: "updateUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "name that need to be updated"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "Updated user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        400:
+          description: "Invalid user supplied"
+        404:
+          description: "User not found"
+    delete:
+      tags:
+      - "user"
+      summary: "Delete user"
+      description: "This can only be done by the logged in user."
+      operationId: "deleteUser"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "The name that needs to be deleted"
+        required: true
+        type: "string"
+      responses:
+        400:
+          description: "Invalid username supplied"
+        404:
+          description: "User not found"
+  /user/login:
+    get:
+      tags:
+      - "user"
+      summary: "Logs user into the system"
+      description: ""
+      operationId: "loginUser"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - name: "username"
+        in: "query"
+        description: "The user name for login"
+        required: true
+        type: "string"
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            X-Expires-After:
+              type: "string"
+              format: "date-time"
+              description: "date in UTC when token expires"
+            X-Rate-Limit:
+              type: "integer"
+              format: "int32"
+              description: "calls per hour allowed by the user"
+          schema:
+            type: "string"
+        400:
+          description: "Invalid username/password supplied"
+  /user/register:
+    post:
+      tags:
+      - "user"
+      summary: "User registration"
+      description: "Register a new user"
+      operationId: "registerUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "user"
+        in: "body"
+        description: "User registration data"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "successful operation"
+  /user/getProfile:
+    get:
+      tags:
+      - "user"
+      summary: "Get user profile"
+      description: "Get the profile of the authenticated user"
+      operationId: "getUserProfile"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserProfile"
+  /user/editProfile:
+    put:
+      tags:
+      - "user"
+      summary: "Edit user profile"
+      description: "Edit the profile of the authenticated user"
+      operationId: "editUserProfile"
+      parameters:
+      - name: "user"
+        in: "body"
+        description: "Updated user profile data"
+        required: true
+        schema:
+          $ref: "#/definitions/UserProfile"
+      responses:
+        200:
+          description: "successful operation"
+  /user/changePassword:
+    post:
+      tags:
+      - "user"
+      summary: "Change user's password"
+      description: "Allows an abiturient to change their password"
+      operationId: "changePassword"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            X-Expires-After:
+              type: "string"
+              format: "date-time"
+              description: "date in UTC when token expires"
+            X-Rate-Limit:
+              type: "integer"
+              format: "int32"
+              description: "calls per hour allowed by the user"
+          schema:
+            type: "string"
+        400:
+          description: "Invalid username/password supplied"
+  /user/logout:
+    get:
+      tags:
+      - "user"
+      summary: "Logs out current logged in user session"
+      description: ""
+      operationId: "logoutUser"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters: []
+      responses:
+        default:
+          description: "successful operation"
+  /user/createUser:
+    post:
+      tags:
+      - "user"
+      summary: "Create user"
+      description: "This can only be done by the logged in user."
+      operationId: "createUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      - "application/xml"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Created user object"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+  /notifications/emailAbiturient:
+    post:
+      tags:
+      - "notifications"
+      summary: "Send email notification"
+      description: "Send an email notification to the abiturient"
+      operationId: "emailAbiturient"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "notification"
+        in: "body"
+        description: "Notification data"
+        required: true
+        schema:
+          $ref: "#/definitions/EmailNotification"
+      responses:
+        200:
+          description: "successful operation"
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+  petstore_auth:
+    type: "oauth2"
+    authorizationUrl: "https://petstore.swagger.io/oauth/authorize"
+    flow: "implicit"
+    scopes:
+      read:pets: "read your pets"
+      write:pets: "modify pets in your account"
+definitions:
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+  Tag:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    xml:
+      name: "Tag"
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      username:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      userStatus:
+        type: "integer"
+        format: "int32"
+        description: "User Status"
+    xml:
+      name: "User"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
