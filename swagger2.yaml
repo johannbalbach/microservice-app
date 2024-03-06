@@ -61,7 +61,7 @@ paths:
           description: "successful operation"
           schema:
             type: "file"
-  /documents/editDocuments:
+  /documents/editDocument/{id}:
     put:
       tags:
       - "documents"
@@ -73,6 +73,11 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of the document to download"
+        required: true
+        type: "string"
       - name: "document"
         in: "body"
         description: "Updated document data"
@@ -140,7 +145,7 @@ paths:
         required: true
         schema:
           $ref: "#/definitions/Document"
-  /university/getMyPrograms:
+  /Applicant/getMyPrograms:
     get:
       tags:
       - "university"
@@ -154,7 +159,7 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/getMyPrograms"
-  /university/addProgramToMyList/{id}:
+  /Applicant/addProgramToMyList/{id}:
     post:
       tags:
       - "university"
@@ -170,7 +175,7 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /university/changeProgramPriority/{id}:
+  /Applicant/changeProgramPriority/{id}:
     put:
       tags:
       - "university"
@@ -186,7 +191,7 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /university/removeProgramFromMyList/{id}:
+  /Applicant/removeProgramFromMyList/{id}:
     delete:
       tags:
       - "university"
@@ -202,7 +207,7 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /university/getListOfPrograms:
+  /Applicant/getListOfPrograms:
     get:
       tags:
       - "university"
@@ -324,63 +329,6 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /management/deleteScan/{id}:
-    delete:
-      tags:
-      - "management"
-      summary: "Delete document scan"
-      description: "Delete a specific document scan"
-      operationId: "deleteScan"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "ID of the document scan to delete"
-        required: true
-        type: "string"
-      responses:
-        200:
-          description: "successful operation"
-  /management/uploadScan/:
-    post:
-      tags:
-      - "management"
-      summary: "Upload a document scan"
-      description: "Upload a scanned document"
-      operationId: "uploadScan"
-      consumes:
-      - "multipart/form-data"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "file"
-        in: "formData"
-        description: "The file to upload"
-        required: true
-        type: "file"
-      responses:
-        200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Document"
-  /management/editDocument/{id}:
-    put:
-      tags:
-      - "management"
-      summary: "Edit document details"
-      description: "Edit details of a specific document"
-      operationId: "editDocument"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "ID of the document to edit"
-        required: true
-        type: "string"
-      - name: "document"
-        in: "body"
-        description: "Updated document data"
-        required: true
-        schema:
-          $ref: "#/definitions/Document"
   /management/editEnrollmentStatus/{id}:
     put:
       tags:
