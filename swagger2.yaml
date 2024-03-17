@@ -27,7 +27,30 @@ schemes:
 - "https"
 - "http"
 paths:
-  /documents/getDocuments:
+  /documents/getPassport:
+    get:
+      tags:
+      - "documents"
+      summary: "Получить паспорт абитуриента"
+      description: "Возвращает информацию о паспорте абитуриента, авторизованного в системе."
+      operationId: "getApplicantPassport"
+      produces:
+      - "application/json"
+      - "application/xml"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              $ref: "#/components/schemas/Document"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+  /documents/getEducationDocument:
     get:
       tags:
       - "documents"
@@ -41,7 +64,35 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/UserDocuments"
-  /documents/download/{id}:
+  /documents/{ApplicantId}/getPassport:
+    get:
+      tags:
+      - "documents"
+      summary: "Get user's documents"
+      description: "Allows an abiturient to get their documents"
+      operationId: "getDocuments"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserDocuments"
+  /documents/{ApplicantId}/getEducationDocument:
+    get:
+      tags:
+      - "documents"
+      summary: "Get user's documents"
+      description: "Allows an abiturient to get their documents"
+      operationId: "getDocuments"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserDocuments"
+  /documents/download/{ScanId}:
     get:
       tags:
       - "documents"
@@ -61,7 +112,7 @@ paths:
           description: "successful operation"
           schema:
             type: "file"
-  /documents/editDocument/{id}:
+  /documents/editDocument/{DocementId}:
     put:
       tags:
       - "documents"
@@ -84,7 +135,7 @@ paths:
         required: true
         schema:
           $ref: "#/definitions/Document"
-  /documents/deleteScan:
+  /documents/deleteScan/{ScanId}:
     delete:
       tags:
       - "documents"
@@ -100,7 +151,7 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /documents/uploadScan:
+  /documents/uploadScan/{DocumentId}:
     post:
       tags:
       - "documents"
@@ -122,7 +173,7 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/Document"
-  /documents/update/{id}:
+  /documents/updateScan/{ScanId}:
     put:
       tags:
       - "documents"
@@ -221,7 +272,7 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/ProgramList"
-  /enrollment/getAdmission:
+  /enrollment/getAdmission/{id}:
     get:
       tags:
       - "enrollment"
@@ -255,7 +306,7 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/AdmissionList"
-  /enrollment/rejectAdmission/{id}:
+  /enrollment/editAdmissionStatus/{id}:
     put:
       tags:
       - "enrollment"
@@ -271,7 +322,7 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /enrollment/assignManager/{admission_id}:
+  /enrollment/assignManager/{admissionId}:
     put:
       tags:
       - "enrollment"
@@ -329,27 +380,6 @@ paths:
       responses:
         200:
           description: "successful operation"
-  /management/editEnrollmentStatus/{id}:
-    put:
-      tags:
-      - "management"
-      summary: "Edit enrollment status"
-      description: "Edit the enrollment status of a specific applicant"
-      operationId: "editEnrollmentStatus"
-      parameters:
-      - name: "id"
-        in: "path"
-        description: "ID of the applicant to edit enrollment status"
-        required: true
-        type: "string"
-      - name: "status"
-        in: "query"
-        description: "New enrollment status"
-        required: true
-        type: "string"
-      responses:
-        200:
-          description: "successful operation"
   /management/getListOfManagers:
     get:
       tags:
@@ -364,7 +394,28 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/ManagerList"
-  /management/addManager:
+  /management/addManager/{userId}:
+    post:
+      tags:
+      - "management"
+      summary: "Add a new manager"
+      description: "Add a new manager to the system"
+      operationId: "addManager"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "manager"
+        in: "body"
+        description: "New manager data"
+        required: true
+        schema:
+          $ref: "#/definitions/Manager"
+      responses:
+        200:
+          description: "successful operation"
+  /management/addMainManager/{userId}:
     post:
       tags:
       - "management"
@@ -420,127 +471,6 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/ImportStatus"
-  /user/createWithArray*:
-    post:
-      tags:
-      - "user"
-      summary: "Creates list of users with given input array"
-      description: ""
-      operationId: "createUsersWithArrayInput"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "List of user object"
-        required: true
-        schema:
-          type: "array"
-          items:
-            $ref: "#/definitions/User"
-      responses:
-        default:
-          description: "successful operation"
-  /user/createWithList*:
-    post:
-      tags:
-      - "user"
-      summary: "Creates list of users with given input array"
-      description: ""
-      operationId: "createUsersWithListInput"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "List of user object"
-        required: true
-        schema:
-          type: "array"
-          items:
-            $ref: "#/definitions/User"
-      responses:
-        default:
-          description: "successful operation"
-  /user/{username}*:
-    get:
-      tags:
-      - "user"
-      summary: "Get user by user name"
-      description: ""
-      operationId: "getUserByName"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "The name that needs to be fetched. Use user1 for testing. "
-        required: true
-        type: "string"
-      responses:
-        200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/User"
-        400:
-          description: "Invalid username supplied"
-        404:
-          description: "User not found"
-    put:
-      tags:
-      - "user"
-      summary: "Updated user"
-      description: "This can only be done by the logged in user."
-      operationId: "updateUser"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "name that need to be updated"
-        required: true
-        type: "string"
-      - in: "body"
-        name: "body"
-        description: "Updated user object"
-        required: true
-        schema:
-          $ref: "#/definitions/User"
-      responses:
-        400:
-          description: "Invalid user supplied"
-        404:
-          description: "User not found"
-    delete:
-      tags:
-      - "user"
-      summary: "Delete user"
-      description: "This can only be done by the logged in user."
-      operationId: "deleteUser"
-      produces:
-      - "application/json"
-      - "application/xml"
-      parameters:
-      - name: "username"
-        in: "path"
-        description: "The name that needs to be deleted"
-        required: true
-        type: "string"
-      responses:
-        400:
-          description: "Invalid username supplied"
-        404:
-          description: "User not found"
   /user/login:
     get:
       tags:
@@ -699,7 +629,7 @@ paths:
       responses:
         default:
           description: "successful operation"
-  /notifications/emailAbiturient:
+  /notifications/email/{userId}:
     post:
       tags:
       - "notifications"
@@ -759,24 +689,183 @@ definitions:
       id:
         type: "integer"
         format: "int64"
-      username:
-        type: "string"
-      firstName:
-        type: "string"
-      lastName:
+      fullName:
         type: "string"
       email:
         type: "string"
       password:
         type: "string"
-      phone:
+      role:
         type: "string"
-      userStatus:
-        type: "integer"
-        format: "int32"
-        description: "User Status"
+        enum:
+          - "applicant"
+          - "manager"
+          - "main_manager"
     xml:
       name: "User"
+  Passport:
+    type: "object"
+    properties:
+      series:
+        type: "string"
+      number:
+        type: "string"
+      issuedBy:
+        type: "string"
+      birthDate:
+        type: "string"
+      placeOfBirth:
+        type: "string"
+  Applicant:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      userId:
+        type: "integer"
+        format: "int64"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      birthDate:
+        type: "string"
+        format: "date"
+      gender:
+        type: "string"
+        enum:
+          - "male"
+          - "female"
+      citizenship:
+        type: "string"
+      phoneNumber:
+        type: "string"
+    xml:
+      name: "Applicant"
+  Program:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      facultyId:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+      code:
+        type: "string"
+      educationLevel:
+        type: "string"
+        enum:
+          - "bachelor"
+          - "master"
+          - "postgraduate"
+      language:
+        type: "string"
+      educationForm:
+        type: "string"
+        enum:
+          - "full_time"
+          - "part_time"
+    xml:
+      name: "Program"
+  Faculty:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    xml:
+      name: "Faculty"
+  Document:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      applicantId:
+        type: "integer"
+        format: "int64"
+      documentType:
+        type: "string"
+        enum:
+          - "passport"
+          - "education_document"
+      status:
+        type: "string"
+        enum:
+          - "created"
+          - "under_review"
+          - "approved"
+          - "rejected"
+    xml:
+      name: "Document"
+  Scan:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      documentId:
+        type: "integer"
+        format: "int64"
+      fileName:
+        type: "string"
+      fileUrl:
+        type: "string"
+    xml:
+      name: "Scan"
+  Admission:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      applicantId:
+        type: "integer"
+        format: "int64"
+      programId:
+        type: "integer"
+        format: "int64"
+      priority:
+        type: "integer"
+      status:
+        type: "string"
+        enum:
+          - "created"
+          - "under_review"
+          - "approved"
+          - "rejected"
+      managerId:
+        type: "integer"
+        format: "int64"
+    xml:
+      name: "Admission"
+  Manager:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      userId:
+        type: "integer"
+        format: "int64"
+      facultyId:
+        type: "integer"
+        format: "int64"
+    xml:
+      name: "Manager"
+  DictionaryItem:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+  
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"
