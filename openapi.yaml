@@ -2,13 +2,10 @@ openapi: 3.0.3
 info:
   description: ""
   version: "1.0.6"
-  title: "Swagger Petstore"
+  title: "Swagger Enrollment System"
   termsOfService: "http://swagger.io/terms/"
   contact:
     email: "apiteam@swagger.io"
-  license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 tags:
 - name: "user"
   description: "Operations about user"
@@ -1020,7 +1017,6 @@ paths:
           $ref: "#/components/responses/400"
         '401':
           $ref: "#/components/responses/401"
-
   /user/logout:
     get:
       tags:
