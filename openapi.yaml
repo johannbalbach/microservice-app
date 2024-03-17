@@ -1,0 +1,1395 @@
+openapi: 3.0.3
+info:
+  description: ""
+  version: "1.0.6"
+  title: "Swagger Petstore"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+tags:
+- name: "user"
+  description: "Operations about user"
+- name: "documents"
+  description: "Operations with documents"
+- name: "enrollment"
+  description: "Operations with user enrollment"
+- name: "dictionary"
+  description: "Operations with dictionary/external database"
+paths:
+  /documents/getPassport:
+    get:
+      tags:
+        - "documents"
+      summary: "Получить паспорт абитуриента"
+      description: "Возвращает информацию о паспорте абитуриента, авторизованного в системе."
+      operationId: "getApplicantPassport"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Passport"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/getEducationDocument:
+    get:
+      tags:
+        - "documents"
+      summary: "Получить документ об образовании абитуриента"
+      description: "Возвращает информацию о документе об образовании абитуриента, авторизованного в системе."
+      operationId: "getApplicantEducationDocument"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/{ApplicantId}/getPassport:
+    get:
+      tags:
+        - "documents"
+      summary: "Получить паспорт абитуриента (менеджер)"
+      description: "Возвращает информацию о паспорте абитуриента по его ID. Доступно только менеджерам."
+      operationId: "getApplicantPassportByIdManager"
+      parameters:
+      - in: path
+        name: ApplicantId
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/{ApplicantId}/getEducationDocument:
+    get:
+      tags:
+        - "documents"
+      summary: "Получить документ об образовании абитуриента (менеджер)"
+      description: "Возвращает информацию о документе об образовании абитуриента по его ID. Доступно только менеджерам."
+      operationId: "getApplicantEducationDocumentByIdManager"
+      parameters:
+        - in: path
+          name: ApplicantId
+          required: true
+          schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/download/{ScanId}:
+    get:
+      tags:
+        - "documents"
+      summary: "Скачать скан документа"
+      description: "Позволяет скачать скан документа по его ID. Доступно авторизованному пользователю, которому принадлежит документ, а также привелигированным менеджерам."
+      operationId: "downloadDocumentScan"
+      parameters:
+        - in: path
+          name: ScanId
+          required: true
+          schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref:  "#/components/schemas/File"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/editDocument/{DocumentId}:
+    put:
+      tags:
+      - "documents"
+      summary: "Редактировать документ"
+      description: "Позволяет изменить тип документа. Доступно авторизованному пользователю, которому принадлежит документ, а также привелигированным менеджерам."
+      operationId: "editDocument"
+      parameters:
+      - name: "DocumentId"
+        in: "path"
+        required: true
+        schema: {
+          "type": "string",
+          "format": "uuid"
+        }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                documentType:
+                  type: "string"
+                  enum:
+                    - "passport"
+                    - "education_document"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/deleteScan/{ScanId}:
+    delete:
+      tags:
+      - "documents"
+      summary: "Удалить скан документа"
+      description: "Позволяет удалить скан документа по его ID.  Доступно авторизованному пользователю, которому принадлежит документ, а также привелигированным менеджерам."
+      operationId: "deleteDocumentScan"
+      parameters:
+      - name: "ScanId"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      responses:
+        '200':
+          description: "OK"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/uploadScan/{DocumentId}:
+    post:
+      tags:
+      - "documents"
+      summary: "Загрузить скан документа"
+      description: "Позволяет загрузить скан документа.  Доступно авторизованному пользователю, которому принадлежит документ, а также привелигированным менеджерам."
+      operationId: "uploadDocumentScan"
+      parameters:
+      - name: "DocumentId"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      - name: "file"
+        in: "query"
+        required: true
+        schema: {
+              "type": "object",
+              "format": "file"
+            }
+        description: "Файл скан-копии документа"
+      responses:
+        '200':
+          description: "OK"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /documents/updateScan/{ScanId}:
+    put:
+      tags:
+      - "documents"
+      summary: "Обновить скан документа"
+      description: "Позволяет заменить скан документа по его ID новым файлом.  Доступно только авторизованному пользователю, которому принадлежит документ."
+      operationId: "updateDocumentScan"
+      parameters:
+      - name: "ScanId"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      - name: "file"
+        in: "query"
+        required: true
+        schema: {
+              "type": "object",
+              "format": "file"
+            }
+        description: "Файл скан-копии документа"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /Applicant/getListOfFaculties:
+    get:
+      tags:
+      - "applicant"
+      summary: "Получить список факультетов"
+      description: "Возвращает список всех факультетов, без фильтрации"
+      operationId: "getFaculties"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FacultyList"
+        '401':
+          $ref: "#/components/responses/401"
+  /Applicant/getMyPrograms:
+    get:
+      tags:
+      - "applicant"
+      summary: "Получить список программ абитуриента"
+      description: "Возвращает список программ, в которые подал документы авторизованный абитуриент."
+      operationId: "getApplicantPrograms"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+  /Applicant/addProgramToMyList/{id}:
+    post:
+      tags:
+      - "applicant"
+      summary: "Подать документы на программу"
+      description: "Позволяет авторизованному абитуриенту подать документы на программу по ее ID."
+      operationId: "addProgramToApplicantList"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      responses:
+        '200':
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /Applicant/changeProgramPriority/{id}:
+    put:
+      tags:
+      - "applicant"
+      summary: "Изменить приоритет программы"
+      description: "Позволяет авторизованному абитуриенту изменить приоритет программы в своем списке."
+      operationId: "changeProgramPriority"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                priority:
+                  type: "integer"
+      responses:
+        '200':
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /Applicant/removeProgramFromMyList/{id}:
+    delete:
+      tags:
+      - "applicant"
+      summary: "Удалить программу из списка"
+      description: "Позволяет авторизованному абитуриенту удалить программу из своего списка."
+      operationId: "removeProgramFromApplicantList"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+  /Applicant/getListOfPrograms:
+    get:
+      tags:
+        - "applicant"
+      summary: "Получить список программ с пагинацией и фильтрацией"
+      description: "Возвращает список программ для подачи документов с возможностью пагинации и фильтрации по факультету, уровню образования, форме обучения, языку обучения и части названия/кода программы."
+      operationId: "getListOfProgramsWithPaginationAndFiltering"
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+          description: "Номер страницы (по умолчанию 1)"
+        - name: "size"
+          in: "query"
+          schema:
+            type: "integer"
+          description: "Количество элементов на странице (по умолчанию 10)"
+        - name: "facultyId"
+          in: "query"
+          schema:
+            type: "integer"
+            format: "int64"
+          description: "Идентификатор факультета (опционально)"
+        - name: "educationLevel"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "bachelor"
+              - "master"
+              - "postgraduate"
+          description: "Уровень образования (опционально)"
+        - name: "educationForm"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "full_time"
+              - "part_time"
+          description: "Форма обучения (опционально)"
+        - name: "language"
+          in: "query"
+          schema:
+            type: "string"
+          description: "Язык обучения (опционально)"
+        - name: "search"
+          in: "query"
+          schema:
+            type: "string"
+          description: "Поиск по части названия/кода программы (опционально)"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramWithPaginationInfo"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /enrollment/getAdmission/{id}:
+    get:
+      tags:
+      - "enrollment"
+      summary: "Получить информацию о поступлении"
+      description: "Возвращает информацию о поступлении абитуриента по его ID (доступно только авторизованному абитуриенту)."
+      operationId: "getApplicantAdmission"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "integer"
+          format: "int64"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Admission"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /enrollment/getListOfAdmissions:
+    get:
+      tags:
+        - "enrollment"
+      summary: "Получить список поступлений с пагинацией, фильтрацией и сортировкой"
+      description: "Возвращает список заявок на поступление, видимых этому менеджеру, с возможностью пагинации, фильтрации по имени, программе, факультету, статусу, наличию менеджера, а также сортировки по дате внесения последних изменений."
+      operationId: "getListOfAdmissionsWithPaginationFilteringAndSorting"
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+          description: "Номер страницы (по умолчанию 1)"
+        - name: "size"
+          in: "query"
+          schema:
+            type: "integer"
+          description: "Количество элементов на странице (по умолчанию 10)"
+        - name: "search"
+          in: "query"
+          schema:
+            type: "string"
+          description: "Поиск по части имени абитуриента (опционально)"
+        - name: "programId"
+          in: "query"
+          schema:
+            type: "integer"
+            format: "int64"
+          description: "Идентификатор программы (опционально)"
+        - name: "facultyIds"
+          in: "query"
+          schema:
+            type: "array"
+            items:
+              type: "integer"
+              format: "int64"
+          description: "Список идентификаторов факультетов (опционально)"
+        - name: "status"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "created"
+              - "under_review"
+              - "approved"
+              - "rejected"
+          description: "Статус заявки (опционально)"
+        - name: "unassignedOnly"
+          in: "query"
+          schema:
+            type: "boolean"
+          description: "Отображать только заявки без менеджера (опционально)"
+        - name: "sortBy"
+          in: "query"
+          schema:
+            type: "string"
+            enum:
+              - "lastModifiedDateDesc"
+              - "lastModifiedDateAsc"
+          description: "Поле для сортировки (опционально)"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdmissionWithPaginationInfo"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '404':
+          $ref: "#/components/responses/404"
+  /enrollment/editAdmissionStatus/{id}:
+    put:
+      tags:
+      - "enrollment"
+      summary: "Подтвердить/отклонить предложение о зачислении"
+      description: "Позволяет авторизованному абитуриенту подтвердить или отклонить предложение о зачислении по его ID."
+      operationId: "editAdmissionStatus"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "integer"
+          format: "int64"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                status:
+                  type: "string"
+                  enum:
+                    - "approved"
+                    - "rejected"
+      responses:
+        '200':
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /enrollment/assignManager/{admissionId}:
+    put:
+      tags:
+      - "enrollment"
+      summary: "Назначить менеджера абитуриенту"
+      description: "Позволяет менеджеру назначить себя ответственным за конкретного абитуриента по его ID поступления."
+      operationId: "assignManagerToAdmission"
+      parameters:
+      - name: "admissionId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      responses:
+        200:
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /management/getApplicant/{id}:
+    get:
+      tags:
+      - "management"
+      summary: "Получить информацию об абитуриенте"
+      description: "Возвращает информацию об абитуриенте по его ID (доступно только менеджерам)."
+      operationId: "getApplicantByIdManager"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "integer"
+          format: "int64"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /management/getListOfApplicants:
+    get:
+      tags:
+      - "management"
+      summary: "Получить список абитуриентов, привязанных к менеджеру"
+      description: "Возвращает список абитуриентов, видимых данному менеджеру, с возможностью фильтрации по имени, фамилии, дате рождения, полу, гражданству, номеру телефона."
+      operationId: "getApplicantsListManagerWithFiltering"
+      parameters:
+      - name: "search"
+        in: "query"
+        schema:
+          type: "string"
+        description: "Поиск по имени, фамилии (опционально)"
+      - name: "birthDateFrom"
+        in: "query"
+        schema:
+          type: "string"
+          format: "date"
+        description: "Дата рождения с (опционально)"
+      - name: "birthDateTo"
+        in: "query"
+        schema:
+          type: "string"
+          format: "date"
+        description: "Дата рождения по (опционально)"
+      - name: "gender"
+        in: "query"
+        schema:
+          type: "string"
+          enum:
+          - "male"
+          - "female"
+        description: "Пол (опционально)"
+      - name: "citizenship"
+        in: "query"
+        schema:
+          type: "string"
+        description: "Гражданство (опционально)"
+      - name: "phoneNumber"
+        in: "query"
+        schema:
+          type: "string"
+        description: "Номер телефона (опционально)"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicantsList"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '404':
+          $ref: "#/components/responses/404"
+  /management/editApplicant/{id}:
+    put:
+      tags:
+      - "management"
+      summary: "Редактировать информацию об абитуриенте"
+      description: "Позволяет менеджеру изменить информацию об абитуриенте по его ID."
+      operationId: "editApplicantByIdManager"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema: {
+              "type": "string",
+              "format": "uuid"
+            }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Applicant"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Applicant"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /management/getListOfManagers:
+    get:
+      tags:
+      - "management"
+      summary: "Получить список менеджеров"
+      description: "Возвращает список менеджеров, видимых данному администратору, с возможностью фильтрации по типу, факультету, абитуриенту и другим параметрам."
+      operationId: "getListOfManagersWithFiltering"
+      parameters:
+      - name: "type"
+        in: "query"
+        schema:
+          type: "string"
+          enum:
+            - "main"
+            - "regular"
+        description: "Тип менеджера (опционально)"
+      - name: "facultyId"
+        in: "query"
+        schema:
+          type: "string"
+          format: "uuid"
+        description: "Идентификатор факультета (опционально)"
+      - name: "applicantId"
+        in: "query"
+        schema:
+          type: "string"
+          format: "uuid"
+        description: "Идентификатор абитуриента (опционально)"
+      - name: "search"
+        in: "query"
+        schema:
+          type: "string"
+        description: "Поиск по имени, фамилии (опционально)"
+      - name: "sortBy"
+        in: "query"
+        schema:
+          type: "string"
+          enum:
+          - "lastNameAsc"
+          - "lastNameDesc"
+        description: "Поле для сортировки (опционально)"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagersList"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '404':
+          $ref: "#/components/responses/404"
+  /management/addManager/{userId}:
+    post:
+      tags:
+      - "management"
+      summary: "Добавить менеджера"
+      description: "Позволяет добавить нового менеджера по его ID пользователя."
+      operationId: "addManager"
+      parameters:
+      - name: "userId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Manager"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /management/addMainManager/{userId}:
+    post:
+      tags:
+      - "management"
+      summary: "Добавить главного менеджера"
+      description: "Позволяет добавить нового главного менеджера по его ID пользователя."
+      operationId: "addMainManager"
+      parameters:
+      - name: "userId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Manager"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /dictionary/importDictionary:
+    post:
+      tags:
+      - "dictionary"
+      summary: "Импортировать словарь"
+      description: "Позволяет импортировать словарь из файла."
+      operationId: "importDictionary"
+      parameters:
+      - name: "file"
+        in: "query"
+        required: true
+        schema:
+          type: "object"
+          format: "file"
+        description: "Файл словаря (формат зависит от реализации)"
+      responses:
+        200:
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /dictionary/checkStatus/{importId}:
+    get:
+      tags:
+      - "dictionary"
+      summary: "Проверка статуса импорта словаря"
+      description: "Позволяет проверить статус импорта словаря по ID задачи импорта."
+      operationId: "checkDictionaryImportStatus"
+      parameters:
+      - name: "importId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  status:
+                    type: "string"
+                    enum:
+                      - "pending"
+                      - "processing"
+                      - "completed"
+                      - "failed"
+                  message:
+                    type: "string"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /user/login:
+      post:
+        summary: Авторизация пользователя
+        tags: [user]
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginCredentials"
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/TokenResponse"
+          '400':
+            $ref: "#/components/responses/400"
+          '401':
+            $ref: "#/components/responses/401"
+  /user/register:
+    post:
+      summary: Регистрация нового пользователя
+      tags: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterDTO"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        '400':
+          $ref: "#/components/responses/400"
+  /user/profile:
+    get:
+      summary: Получение информации о профиле пользователя
+      tags: [user]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileDTO"
+        '401':
+          $ref: "#/components/responses/401"
+    put:
+      summary: Обновление информации о профиле пользователя
+      tags: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileEditDTO"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileDTO"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+  /user/changePassword:
+    post:
+      tags:
+      - "user"
+      summary: "Поменять пароль пользователя"
+      description: "Возвращает токен, надо переавторизовываться"
+      operationId: "changePassword"
+      parameters:
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+
+  /user/logout:
+    get:
+      tags:
+      - "user"
+      summary: "Выход из аккаунта"
+      description: ""
+      operationId: "logoutUser"
+      parameters: []
+      responses:
+        200:
+          description: "successful operation"
+        '401':
+          $ref: "#/components/responses/401"
+  /notifications/email/{userId}:
+    post:
+      tags:
+      - "notifications"
+      summary: "Отправить email-уведомление"
+      description: "Отправляет email-уведомление с указанным текстом конкретному юзеру по его ID."
+      operationId: "sendEmailNotification"
+      parameters:
+      - name: "userId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                message:
+                  type: "string"
+      responses:
+        200:
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '404':
+          $ref: "#/components/responses/404"
+components:
+  schemas:
+    UserRegisterDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      xml:
+        name: User
+    UserProfileDTO:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - applicant
+            - manager
+            - main_manager
+      xml:
+        name: User
+    UserProfileEditDTO:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+      xml:
+        name: User
+    Passport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        series:
+          type: string
+        number:
+          type: string
+        issuedBy:
+          type: string
+        birthDate:
+          type: string
+        placeOfBirth:
+          type: string
+    Applicant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        citizenship:
+          type: string
+        phoneNumber:
+          type: string
+    ApplicantsList:
+      type: object
+      properties:
+        applicants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Applicant"
+    Program:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        facultyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        educationLevel:
+          type: string
+          enum:
+            - bachelor
+            - master
+            - postgraduate
+        language:
+          type: string
+        educationForm:
+          type: string
+          enum:
+            - full_time
+            - part_time
+      xml:
+        name: Program
+    Faculty:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      xml:
+        name: Faculty
+    FacultyList:
+      type: object
+      properties:
+        Faculties:
+          type: array
+          items:
+            $ref: "#/components/schemas/Faculty"
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        applicantId:
+          type: string
+          format: uuid
+        documentType:
+          type: string
+          enum:
+            - passport
+            - education_document
+        status:
+          type: string
+          enum:
+            - created
+            - under_review
+            - approved
+            - rejected
+      xml:
+        name: Document
+    Scan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        documentId:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        fileUrl:
+          type: string
+      xml:
+        name: Scan
+    Admission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        applicantId:
+          type: string
+          format: uuid
+        programId:
+          type: integer
+          format: int64
+        priority:
+          type: integer
+        status:
+          type: string
+          enum:
+            - created
+            - under_review
+            - approved
+            - rejected
+        managerId:
+          type: string
+          format: uuid
+      xml:
+        name: Admission
+    Manager:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        facultyId:
+          type: string
+          format: uuid
+      xml:
+        name: Manager
+    ManagersList:
+      type: object
+      properties:
+        managers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Manager"
+    DictionaryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+    ProgramWithPaginationInfo:
+      type: object
+      properties:
+        programs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Program"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int64
+    AdmissionWithPaginationInfo:
+      type: object
+      properties:
+        admissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Admission"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int64
+    LoginCredentials:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: "Имя пользователя"
+        password:
+          type: string
+          description: "Пароль"
+          format: password
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: "Токен доступа"
+        expiresIn:
+          type: integer
+          description: "Время жизни токена в секундах"
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: "Код ошибки"
+        message:
+          type: string
+          description: "Описание ошибки"
+    File:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        name:
+          type: string
+        documentId:
+          type: string
+          format: uuid
+  responses:
+      '400':
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      '401':
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      '403':
+        description: Forbidden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      '404':
+        description: Not Found
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      '409':
+        description: Conflict
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      '500':
+        description: Internal Server Error
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+    
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
