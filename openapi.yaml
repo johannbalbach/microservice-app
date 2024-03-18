@@ -174,10 +174,18 @@ paths:
       responses:
         '200':
           description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref:  "#/components/schemas/File"
+          content: 
+            multipart/form-data: 
+              schema: 
+                type: "object"
+                properties:
+                  file:
+                    type: "string"
+                    format: "binary"
+                    nullable: true
+              encoding:
+                file:
+                  style: form
         '401':
           $ref: "#/components/responses/401"
         '403':
