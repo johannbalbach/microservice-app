@@ -16,6 +16,28 @@ tags:
 - name: "dictionary"
   description: "Operations with dictionary/external database"
 paths:
+  /documents/addPassport:
+      post:
+        tags:
+          - "documents"
+        summary: "Добавить паспорт абитуриента"
+        description: "Добавляет информацию о паспорте абитуриента, авторизованного в системе."
+        operationId: "addApplicantPassport"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PassportCreateDTO"
+        responses:
+          '200':
+            description: "OK"
+          '401':
+            $ref: "#/components/responses/401"
+          '403':
+            $ref: "#/components/responses/403"
+          '404':
+            $ref: "#/components/responses/404"
   /documents/getPassport:
     get:
       tags:
@@ -56,6 +78,28 @@ paths:
           $ref: "#/components/responses/403"
         '404':
           $ref: "#/components/responses/404"
+  /documents/addEducationDocument:
+      post:
+        tags:
+          - "documents"
+        summary: "Добавить документ об образовании абитуриента"
+        description: "Добавляет информацию о документе об образовании абитуриента, авторизованного в системе."
+        operationId: "addApplicantEducationDocument"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentCreateDTO"
+        responses:
+          '200':
+            description: "OK"
+          '401':
+            $ref: "#/components/responses/401"
+          '403':
+            $ref: "#/components/responses/403"
+          '404':
+            $ref: "#/components/responses/404"
   /documents/{ApplicantId}/getPassport:
     get:
       tags:
@@ -77,7 +121,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Document"
+                $ref: "#/components/schemas/Passport"
         '401':
           $ref: "#/components/responses/401"
         '403':
@@ -151,10 +195,9 @@ paths:
       - name: "DocumentId"
         in: "path"
         required: true
-        schema: {
-          "type": "string",
-          "format": "uuid"
-        }
+        schema:
+              type: "string"
+              format: "uuid"
       requestBody:
         required: true
         content:
@@ -193,10 +236,9 @@ paths:
       - name: "ScanId"
         in: "path"
         required: true
-        schema: {
-              "type": "string",
-              "format": "uuid"
-            }
+        schema:
+              type: "string"
+              format: "uuid"
       responses:
         '200':
           description: "OK"
@@ -217,17 +259,22 @@ paths:
       - name: "DocumentId"
         in: "path"
         required: true
-        schema: {
-              "type": "string",
-              "format": "uuid"
-            }
-      - name: "file"
-        in: "query"
-        required: true
-        schema: {
-              "type": "object",
-              "format": "file"
-            }
+        schema:
+              type: "string"
+              format: "uuid"
+      requestBody:
+        content: 
+          multipart/form-data: 
+            schema: 
+              type: "object"
+              properties:
+                file:
+                  type: "string"
+                  format: "binary"
+                  nullable: true
+            encoding:
+              file:
+                style: form
         description: "Файл скан-копии документа"
       responses:
         '200':
@@ -243,23 +290,28 @@ paths:
       tags:
       - "documents"
       summary: "Обновить скан документа"
-      description: "Позволяет заменить скан документа по его ID новым файлом.  Доступно только авторизованному пользователю, которому принадлежит документ."
+      description: "Позволяет загрузить скан документа.  Доступно авторизованному пользователю, которому принадлежит документ, а также привелигированным менеджерам."
       operationId: "updateDocumentScan"
       parameters:
       - name: "ScanId"
         in: "path"
         required: true
-        schema: {
-              "type": "string",
-              "format": "uuid"
-            }
-      - name: "file"
-        in: "query"
-        required: true
-        schema: {
-              "type": "object",
-              "format": "file"
-            }
+        schema:
+              type: "string"
+              format: "uuid"
+      requestBody:
+        content: 
+          multipart/form-data: 
+            schema: 
+              type: "object"
+              properties:
+                file:
+                  type: "string"
+                  format: "binary"
+                  nullable: true
+            encoding:
+              file:
+                style: form
         description: "Файл скан-копии документа"
       responses:
         '200':
@@ -305,7 +357,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Program"
+                $ref: "#/components/schemas/ApplicantProgramList"
         '400':
           $ref: "#/components/responses/401"
         '401':
@@ -387,14 +439,16 @@ paths:
               "format": "uuid"
             }
       responses:
-        200:
+        '200':
           description: "OK"
-        401:
-          description: "Unauthorized"
-        403:
-          description: "Forbidden"
-        404:
-          description: "Not Found"
+        '400':
+          $ref: "#/components/responses/401"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
   /Applicant/getListOfPrograms:
     get:
       tags:
@@ -466,7 +520,7 @@ paths:
       tags:
       - "enrollment"
       summary: "Получить информацию о поступлении"
-      description: "Возвращает информацию о поступлении абитуриента по его ID (доступно только авторизованному абитуриенту)."
+      description: "Возвращает информацию о поступлении абитуриента по его ID (Доступно только менеджерам и выше)."
       operationId: "getApplicantAdmission"
       parameters:
       - name: "id"
@@ -493,7 +547,7 @@ paths:
       tags:
         - "enrollment"
       summary: "Получить список поступлений с пагинацией, фильтрацией и сортировкой"
-      description: "Возвращает список заявок на поступление, видимых этому менеджеру, с возможностью пагинации, фильтрации по имени, программе, факультету, статусу, наличию менеджера, а также сортировки по дате внесения последних изменений."
+      description: "Возвращает список заявок на поступление, видимых этому менеджеру(подразумевается, что по дефолту все заявки на поступлении в факультете этого менеджера уже приписаны ему), с возможностью пагинации, фильтрации по имени, программе, факультету, статусу, наличию менеджера, а также сортировки по дате внесения последних изменений."
       operationId: "getListOfAdmissionsWithPaginationFilteringAndSorting"
       parameters:
         - name: "page"
@@ -566,7 +620,7 @@ paths:
       tags:
       - "enrollment"
       summary: "Подтвердить/отклонить предложение о зачислении"
-      description: "Позволяет авторизованному абитуриенту подтвердить или отклонить предложение о зачислении по его ID."
+      description: "Позволяет менеджеру подтвердить или отклонить предложение о зачислении по его ID."
       operationId: "editAdmissionStatus"
       parameters:
       - name: "id"
@@ -602,11 +656,36 @@ paths:
     put:
       tags:
       - "enrollment"
-      summary: "Назначить менеджера абитуриенту"
-      description: "Позволяет менеджеру назначить себя ответственным за конкретного абитуриента по его ID поступления."
+      summary: "Назначить менеджера заявке"
+      description: "Позволяет главному менеджеру назначить менеджера ответственным за конкретную заявку о поступлении"
       operationId: "assignManagerToAdmission"
       parameters:
       - name: "admissionId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+      responses:
+        200:
+          description: "OK"
+        '400':
+          $ref: "#/components/responses/400"
+        '401':
+          $ref: "#/components/responses/401"
+        '403':
+          $ref: "#/components/responses/403"
+        '404':
+          $ref: "#/components/responses/404"
+  /enrollment/assignManagerToApplicant/{applicantId}:
+    put:
+      tags:
+      - "enrollment"
+      summary: "Назначить менеджера абитуриенту"
+      description: "Позволяет главному менеджеру назначить менеджера ответственным за конкретного абитуриента"
+      operationId: "assignManagerToApplicant"
+      parameters:
+      - name: "applicantId"
         in: "path"
         required: true
         schema:
@@ -655,7 +734,7 @@ paths:
       tags:
       - "management"
       summary: "Получить список абитуриентов, привязанных к менеджеру"
-      description: "Возвращает список абитуриентов, видимых данному менеджеру, с возможностью фильтрации по имени, фамилии, дате рождения, полу, гражданству, номеру телефона."
+      description: "Возвращает список абитуриентов, видимых данному менеджеру, с возможностью фильтрации по имени, фамилии, дате рождения, полу, гражданству, номеру телефона. В результате получает id, имя и пол(чтобы типизированную аватарку поставить, условно) абитуриентов, соответствующих требованиям: сделано так для удобство отображения фронту(как со списком авторов в прошлом семестре)"
       operationId: "getApplicantsListManagerWithFiltering"
       parameters:
       - name: "search"
@@ -796,20 +875,19 @@ paths:
           $ref: "#/components/responses/401"
         '404':
           $ref: "#/components/responses/404"
-  /management/addManager/{userId}:
+  /management/addManager:
     post:
       tags:
       - "management"
       summary: "Добавить менеджера"
       description: "Позволяет добавить нового менеджера по его ID пользователя."
       operationId: "addManager"
-      parameters:
-      - name: "userId"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-          format: "uuid"
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Manager"
       responses:
         '200':
           description: "OK"
@@ -942,7 +1020,7 @@ paths:
             $ref: "#/components/responses/401"
   /user/register:
     post:
-      summary: Регистрация нового пользователя
+      summary: Регистрация нового пользователя(менеджера, гл. менеджера)
       tags: [user]
       requestBody:
         required: true
@@ -959,39 +1037,75 @@ paths:
                 $ref: "#/components/schemas/TokenResponse"
         '400':
           $ref: "#/components/responses/400"
-  /user/profile:
-    get:
-      summary: Получение информации о профиле пользователя
-      tags: [user]
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserProfileDTO"
-        '401':
-          $ref: "#/components/responses/401"
-    put:
-      summary: Обновление информации о профиле пользователя
+  /user/registerApplicant:
+    post:
+      summary: Регистрация нового абитуриента
       tags: [user]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserProfileEditDTO"
+              $ref: "#/components/schemas/ApplicantRegisterDTO"
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserProfileDTO"
+                $ref: "#/components/schemas/TokenResponse"
+        '400':
+          $ref: "#/components/responses/400"
+  /user/profile:
+    get:
+      summary: Получение информации о профиле пользователя(любого, 2 возможных ответа)
+      tags: [user]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/UserProfileDTO"
+                  - $ref: "#/components/schemas/ApplicantProfileDTO"
+        '401':
+          $ref: "#/components/responses/401"
+    put:
+      summary: Обновление информации о профиле пользователя(любого, в body есть две возможные схемы)
+      tags: [user]
+      parameters:
+      - name: "type"
+        in: "query"
+        schema:
+          type: "string"
+          enum:
+            - "applicant"
+            - "main"
+        description: "тип юзера"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+                anyOf:
+                  - $ref: "#/components/schemas/UserProfileEditDTO"
+                  - $ref: "#/components/schemas/ApplicantProfileEditDTO"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: 
+                anyOf:
+                  - $ref: "#/components/schemas/UserProfileDTO"
+                  - $ref: "#/components/schemas/ApplicantProfileDTO"
         '400':
           $ref: "#/components/responses/400"
         '401':
           $ref: "#/components/responses/401"
+        '409':
+          $ref: "#/components/responses/409"
   /user/changePassword:
     post:
       tags:
@@ -1067,9 +1181,6 @@ components:
     UserRegisterDTO:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
         fullName:
           type: string
         email:
@@ -1102,12 +1213,104 @@ components:
           type: string
       xml:
         name: User
+    ApplicantRegisterDTO:
+      type: object
+      properties:
+        fullName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        citizenship:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      xml:
+        name: User
+    ApplicantProfileDTO:
+      type: object
+      properties:
+        fullName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        citizenship:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - applicant
+            - manager
+            - main_manager
+      xml:
+        name: User
+    ApplicantProfileEditDTO:
+      type: object
+      properties:
+        fullName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        citizenship:
+          type: string
+        phoneNumber:
+          type: string
+        email:
+          type: string
+      xml:
+        name: User
     Passport:
       type: object
       properties:
         id:
           type: string
           format: uuid
+        ApplicantId:
+          type: string
+          format: uuid
+        series:
+          type: string
+        number:
+          type: string
+        issuedBy:
+          type: string
+        birthDate:
+          type: string
+        placeOfBirth:
+          type: string
+        scansId:
+          type: array
+          items:
+            type: string
+            format: uuid
+    PassportCreateDTO:
+      type: object
+      properties:
         series:
           type: string
         number:
@@ -1124,9 +1327,7 @@ components:
         id:
           type: string
           format: uuid
-        firstName:
-          type: string
-        lastName:
+        fullName:
           type: string
         birthDate:
           type: string
@@ -1140,13 +1341,26 @@ components:
           type: string
         phoneNumber:
           type: string
+    ApplicantDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        gender:
+          type: string
+          enum:
+            - male
+            - female
     ApplicantsList:
       type: object
       properties:
         applicants:
           type: array
           items:
-            $ref: "#/components/schemas/Applicant"
+            $ref: "#/components/schemas/ApplicantDTO"
     Program:
       type: object
       properties:
@@ -1175,6 +1389,50 @@ components:
             - part_time
       xml:
         name: Program
+    ApplicantProgramDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        facultyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        educationLevel:
+          type: string
+          enum:
+            - bachelor
+            - master
+            - postgraduate
+        language:
+          type: string
+        educationForm:
+          type: string
+          enum:
+            - full_time
+            - part_time
+        priority:
+          type: integer
+        status:
+          type: string
+          enum:
+            - created
+            - under_review
+            - approved
+            - rejected
+      xml:
+        name: Program
+    ApplicantProgramList:
+      type: object
+      properties:
+        Programs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicantProgramDTO"
     Faculty:
       type: object
       properties:
@@ -1204,15 +1462,28 @@ components:
         documentType:
           type: string
           enum:
-            - passport
-            - education_document
-        status:
+            - education_document1
+            - education_document2
+        scansId:
+          type: array
+          items:
+            type: string
+            format: uuid
+      xml:
+        name: Document
+    DocumentCreateDTO:
+      type: object
+      properties:
+        documentType:
           type: string
           enum:
-            - created
-            - under_review
-            - approved
-            - rejected
+            - education_document1
+            - education_document2
+        EducationLevel:
+          type: string
+          enum:
+            - education_level1
+            - education_level2
       xml:
         name: Document
     Scan:
@@ -1259,7 +1530,7 @@ components:
     Manager:
       type: object
       properties:
-        id:
+        userId:
           type: string
           format: uuid
         facultyId:
@@ -1309,10 +1580,10 @@ components:
     LoginCredentials:
       type: object
       required:
-        - username
+        - email
         - password
       properties:
-        username:
+        email:
           type: string
           description: "Имя пользователя"
         password:
@@ -1348,6 +1619,38 @@ components:
         documentId:
           type: string
           format: uuid
+    GetProgramListQuery:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Номер страницы (по умолчанию 1)
+        size:
+          type: integer
+          description: Количество элементов на странице (по умолчанию 10)
+        facultyId:
+          type: integer
+          format: int64
+          description: Идентификатор факультета (опционально)
+        educationLevel:
+          type: string
+          enum:
+            - "bachelor"
+            - "master"
+            - "postgraduate"
+          description: Уровень образования (опционально)
+        educationForm:
+          type: string
+          enum:
+            - "full_time"
+            - "part_time"
+          description: Форма обучения (опционально)
+        language:
+          type: string
+          description: Язык обучения (опционально)
+        search:
+          type: string
+          description: Поиск по части названия/кода программы (опционально)
   responses:
       '400':
         description: Bad Request
