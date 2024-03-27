@@ -1,0 +1,6 @@
+@DictionaryMicroService_HostAddress = http://localhost:5136
+
+GET {{DictionaryMicroService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
