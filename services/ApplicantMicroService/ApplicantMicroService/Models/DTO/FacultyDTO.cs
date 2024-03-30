@@ -1,7 +1,7 @@
-namespace ApplicantMicroService.Models
+namespace ApplicantMicroService.Models.DTO
 {
-    public class Faculty
-    { 
+    public class FacultyDTO
+    {
         public Guid? Id { get; set; }
         public string Name { get; set; }
     }

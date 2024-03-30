@@ -1,10 +1,10 @@
 using ApplicantMicroService.Models.Enum;
 using System.Text.Json.Serialization;
 
-namespace ApplicantMicroService.Models
+namespace ApplicantMicroService.Models.Query
 {
     public class GetProgramListQuery
-    { 
+    {
         public int? Page { get; set; }
         public int? Size { get; set; }
         public long? FacultyId { get; set; }

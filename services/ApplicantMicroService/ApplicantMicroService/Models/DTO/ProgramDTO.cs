@@ -2,12 +2,13 @@ using System.Runtime.Serialization;
 using ApplicantMicroService.Models.Enum;
 using Newtonsoft.Json;
 
-namespace ApplicantMicroService.Models
+namespace ApplicantMicroService.Models.DTO
 {
-    public class Program 
-    { 
+    public class ProgramDTO
+    {
         public Guid? Id { get; set; }
         public Guid? FacultyId { get; set; }
+        public string FacultyName { get; set; }
         public string Name { get; set; }
         public string Code { get; set; }
 
