@@ -9,7 +9,6 @@ namespace ApplicantMicroService.Models.Entities
         [Key]
         public Guid Id { get; set; }
         public DateTime? CreatedTime { get; set; }
-        public Faculty Faculty { get; set; }
         [Required]
         public Guid FacultyId { get; set; }
         public string Name { get; set; }
@@ -17,5 +16,6 @@ namespace ApplicantMicroService.Models.Entities
         public string Language { get; set; }
         public EducationLevelEnum? EducationLevel { get; set; }
         public EducationFormEnum? EducationForm { get; set; }
+        public Faculty Faculty { get; set; } = null!;
     }
 }

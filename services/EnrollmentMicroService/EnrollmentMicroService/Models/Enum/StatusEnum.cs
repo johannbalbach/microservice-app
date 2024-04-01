@@ -5,12 +5,14 @@ namespace EnrollmentMicroService.Models.Enum
     public enum StatusEnum
     {
         [EnumMember(Value = "created")]
-        CreatedEnum = 0,
+        Created = 0,
         [EnumMember(Value = "under_review")]
-        UnderReviewEnum = 1,
+        UnderReview = 1,
         [EnumMember(Value = "approved")]
-        ApprovedEnum = 2,
+        Approved = 2,
         [EnumMember(Value = "rejected")]
-        RejectedEnum = 3
+        Rejected = 3,
+        [EnumMember(Value = "closed")] 
+        Closed = 4
     }
 }
