@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Applicant.Application\Applicant.Application.csproj" />
-    <ProjectReference Include="..\EA.Services\ApplicantMicroService\ApplicantMicroService\Applicant.Domain.csproj" />
-    <ProjectReference Include="..\Shared.Models\Shared.Models.csproj" />
+    <ProjectReference Include="..\Applicant.Domain\ApplicantMicroService\Applicant.Domain.csproj" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>
