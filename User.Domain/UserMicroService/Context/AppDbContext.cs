@@ -6,10 +6,10 @@ namespace User.Domain.Context
 {
     public class AppDbContext: IdentityDbContext<UserE>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-    : base(options)
+        public DbSet<Token> Tokens { get; set; }
+        public AppDbContext(DbContextOptions<AppDbContext> options): base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
         }
     }
 }

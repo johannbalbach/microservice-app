@@ -5,8 +5,8 @@ namespace Shared.Interfaces
 {
     public interface ITokenService
     {
-        string GenerateAccessToken(string email, RoleEnum role);
-        string GenerateRefreshToken();
-        ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
+        Task<string> GenerateAccessToken(string email, RoleEnum role);
+        Task<string> GenerateRefreshToken();
+        Task<ClaimsPrincipal> GetPrincipalFromExpiredToken(string token);
     }
 }

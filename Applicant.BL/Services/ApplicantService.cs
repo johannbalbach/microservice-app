@@ -1,18 +1,22 @@
-﻿using Applicant.Application.DTO;
-using Applicant.Application.DTO.Query;
-using Applicant.Application.Interfaces;
-using Applicant.Domain.Context;
-using Shared.Models.Models;
+﻿using Applicant.Domain.Context;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Shared.DTO;
+using Shared.DTO.Query;
+using Shared.Interfaces;
+using Shared.Models;
 
 namespace Applicant.BL.Services
 {
     public class ApplicantService : IApplicantService
     {
         private readonly AppDbContext _context;
-        public ApplicantService(AppDbContext context)
+        private readonly IMapper _mapper;
+        public ApplicantService(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<ActionResult<Response>> AddProgramToApplicantList(Guid? id)
@@ -32,7 +36,10 @@ namespace Applicant.BL.Services
 
         public async Task<ActionResult<List<FacultyDTO>>> GetFaculties()
         {
-            return new List<FacultyDTO>();
+            var faculties = await _context.Faculties.ToListAsync();
+            var facultiesDTO = faculties.Select(e => _mapper.Map<FacultyDTO>(e)).ToList();
+
+            return facultiesDTO;
         }
 
         public async Task<ActionResult<List<ProgramDTO>>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query)

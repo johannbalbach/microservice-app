@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Shared.DTO.UserDTO;
+using Shared.DTO;
 using Shared.Models;
-using System.Web.Mvc;
 
 namespace Shared.Interfaces
 {

@@ -5,10 +5,12 @@ namespace Shared.Models.Enums
     public enum RoleEnum
     {
         [EnumMember(Value = "applicant")]
-        ApplicantEnum = 0,
+        Applicant = 0,
         [EnumMember(Value = "manager")]
-        ManagerEnum = 1,
+        Manager = 1,
         [EnumMember(Value = "main_manager")]
-        MainManagerEnum = 2
+        MainManager = 2,
+        [EnumMember(Value = "admin")]
+        Admin = 3,
     }
 }

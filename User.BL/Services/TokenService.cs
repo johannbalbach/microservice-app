@@ -21,7 +21,7 @@ namespace User.BL.Services
             });
         }
 
-        public string GenerateAccessToken(string email, RoleEnum role = RoleEnum.ApplicantEnum)
+        public async Task<string> GenerateAccessToken(string email, RoleEnum role = RoleEnum.Applicant)
         {
             var secretKey = JWTConfiguration.GetSymmetricSecurityKey();
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
@@ -41,7 +41,7 @@ namespace User.BL.Services
 
             return jwtToken;
         }
-        public string GenerateRefreshToken()
+        public async Task<string> GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
@@ -50,7 +50,7 @@ namespace User.BL.Services
                 return Convert.ToBase64String(randomNumber);
             }
         }
-        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        public async Task<ClaimsPrincipal> GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -70,6 +70,12 @@ namespace User.BL.Services
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Invalid token");
             return principal;
+        }
+        public async Task<(string accessToken, string refreshToken)> GenerateTokens(string email, RoleEnum role = RoleEnum.Applicant)
+        {
+            var accessToken = await GenerateAccessToken(email, role);
+            var refreshToken = await GenerateRefreshToken();
+            return (accessToken, refreshToken);
         }
     }
 }
