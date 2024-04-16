@@ -13,6 +13,9 @@ namespace User.BL.MappingProfile
     {
         public MappingProfile()
         {
+            CreateMap<Applicant, ApplicantProfileDTO>();
+            CreateMap<Applicant, ApplicantRegisterDTO>();
+            CreateMap<Applicant, ApplicantProfileEditDTO>();
             CreateMap<UserE, ApplicantProfileDTO>();
             CreateMap<UserE, ApplicantRegisterDTO>();
             CreateMap<UserE, ApplicantProfileEditDTO>();
@@ -21,6 +24,8 @@ namespace User.BL.MappingProfile
             CreateMap<UserE, UserProfileEditDTO>();
             CreateMap<UserE, UserRegisterDTO>();
             CreateMap<UserRegisterDTO, UserE>();
+            CreateMap<ApplicantRegisterDTO, UserE>();
+            CreateMap<ApplicantRegisterDTO, Applicant>();
         }
     }
 }

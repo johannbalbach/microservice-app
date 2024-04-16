@@ -1,4 +1,6 @@
 ﻿using Applicant.Domain.Context;
+using Applicant.Domain.Entities;
+using Applicant.Domain.Repository;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,43 +15,52 @@ namespace Applicant.BL.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public ApplicantService(AppDbContext context, IMapper mapper)
+        private readonly IRepository<UniversityProgram> _programRepository;
+        private readonly IRepository<Faculty> _facultyRepository;
+
+        public ApplicantService(AppDbContext context, IMapper mapper, IRepository<UniversityProgram> programRepository, IRepository<Faculty> facultyRepository)
         {
             _context = context;
             _mapper = mapper;
+            _programRepository = programRepository;
+            _facultyRepository = facultyRepository;
         }
 
         public async Task<ActionResult<Response>> AddProgramToApplicantList(Guid? id)
         {
-            return new Response();
+            // Здесь можно реализовать логику добавления программы к списку абитуриентов
+            throw new NotImplementedException();
         }
 
         public async Task<ActionResult<Response>> ChangeProgramPriority(int priority, Guid? id)
         {
-            return new Response();
+            // Здесь можно реализовать логику изменения приоритета программы
+            throw new NotImplementedException();
         }
 
         public async Task<ActionResult<List<ApplicantProgramDTO>>> GetApplicantPrograms()
         {
-            return new List<ApplicantProgramDTO>();
+            // Здесь можно реализовать логику получения программ абитуриентов
+            throw new NotImplementedException();
         }
 
         public async Task<ActionResult<List<FacultyDTO>>> GetFaculties()
         {
-            var faculties = await _context.Faculties.ToListAsync();
+            var faculties = await _facultyRepository.GetAllAsync();
             var facultiesDTO = faculties.Select(e => _mapper.Map<FacultyDTO>(e)).ToList();
-
             return facultiesDTO;
         }
 
         public async Task<ActionResult<List<ProgramDTO>>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query)
         {
-            return new List<ProgramDTO>();
+            // Здесь можно реализовать логику получения списка программ с пагинацией и фильтрацией
+            throw new NotImplementedException();
         }
 
         public async Task<ActionResult<Response>> RemoveProgramFromApplicantList(Guid? id)
         {
-            return new Response();
+            // Здесь можно реализовать логику удаления программы из списка абитуриентов
+            throw new NotImplementedException();
         }
     }
 }

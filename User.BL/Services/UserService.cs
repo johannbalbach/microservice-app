@@ -11,15 +11,17 @@ using System.IdentityModel.Tokens.Jwt;
 using Shared.Models.Enums;
 using Shared.Exceptions;
 using Newtonsoft.Json.Linq;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace User.BL.Services
 {
     public class UserService: IUserService
     {
-        private readonly AppDbContext _context;
+        private readonly AuthDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        public UserService(AppDbContext context, IMapper mapper, ITokenService tokenService)
+        public UserService(AuthDbContext context, IMapper mapper, ITokenService tokenService)
         {
             _context = context;
             _mapper = mapper;
@@ -36,24 +38,42 @@ namespace User.BL.Services
         }
         private async Task _IsTokenValid(string token)
         {
-/*            var alreadyExistsToken = await _context.UserTokens.FirstOrDefaultAsync(x => x.AccessToken == token);
+            var alreadyExistsToken = await _context.UserTokens.FirstOrDefaultAsync(x => x.AccessToken == token);
 
             if (alreadyExistsToken == null)
             {
                 throw new InvalidTokenException();
-            }*/
+            }
         }
 
 
-        public async Task<ActionResult<Response>> ChangePassword(string password)
+        public async Task<ActionResult<Response>> ChangePassword(string password, string email)
         {
-            // Реализация изменения пароля
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+                throw new InvalidLoginException();
+            if (Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(password))) == user.Password)
+                throw new BadRequestException("Вы ввели тот же самый пароль");
+
+            user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(password)));
+            await _context.SaveChangesAsync();
+
             return new Response { Status = "200", Message = "VSE OK" };
         }
 
-        public async Task<ActionResult<Response>> LogoutUser()
+        public async Task<ActionResult<Response>> LogoutUser(string token)
         {
-            // Реализация выхода пользователя
+            await _IsTokenValid(token);
+
+            var temp = await _context.UserTokens.SingleOrDefaultAsync(h => h.AccessToken == token);
+
+            if (temp == null)
+                throw new InvalidLoginException();
+
+            _context.UserTokens.Remove(temp);
+            await _context.SaveChangesAsync();
+
             return new Response { Status = "200", Message = "VSE OK" };
         }
 
@@ -64,51 +84,102 @@ namespace User.BL.Services
             if (user == null)
                 throw new InvalidLoginException();
 
-            if (user.Password != login.Password)
-                throw new BadRequestException("wrong password, pls try again");
+            if (login.Password != user.Password)
+                throw new BadRequestException("Вы ввели неправильный пароль");
 
-            var temp = await _context.Tokens.SingleOrDefaultAsync(h => h.UserId == user.Id);
+            var temp = await _context.UserTokens.SingleOrDefaultAsync(h => h.UserId == user.Id);
 
             if (temp != null)
             {
-                _context.Tokens.Remove(temp);
-                await _context.SaveChangesAsync();
+                _context.UserTokens.Remove(temp);
+                await _context.SaveChangesAsync();  
             }
 
-            var AccessToken = await _tokenService.GenerateAccessToken(login.Email, RoleEnum.Applicant);
+            var manager = await _context.Managers.SingleOrDefaultAsync(a => a.Id == user.Id);
+            RoleEnum role = RoleEnum.Applicant;
+            if (manager != null)
+                role = RoleEnum.Manager;
+
+            var AccessToken = await _tokenService.GenerateAccessToken(login.Email, role);
             var RefreshToken = await _tokenService.GenerateRefreshToken();
 
-            await _context.Tokens.AddAsync(new Token { AccessToken = AccessToken, RefreshToken = RefreshToken, UserId = user.Id, User=user });
+            await _context.UserTokens.AddAsync(new Token { 
+                UserId = user.Id,
+                LoginProvider = "site",
+                Name = user.FullName,
+                AccessToken = AccessToken,
+                RefreshToken = RefreshToken,
+                RefreshTokenExpiration = DateTime.UtcNow.AddMinutes(JWTConfiguration.RefreshLifeTime)
+            });
             await _context.SaveChangesAsync();
 
-            return new Response("AccessToken: " + AccessToken + "/nRefreshToken: " + RefreshToken);
+            return new Response("AccessToken: " + AccessToken + "\nRefreshToken: " + RefreshToken);
         }
 
-        public async Task<ActionResult<UserProfileDTO>> UserProfileGet()
+        public async Task<ActionResult<UserProfileDTO>> UserProfileGet(string email)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "string");
-            var userDTO = _mapper.Map<UserProfileDTO>(user);
+            var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == email);
+            //applicant manager?
 
-            return userDTO;
+            if (temp == null)
+                throw new InvalidLoginException();
+
+            return _mapper.Map<UserProfileDTO>(temp);
         }
 
-        public async Task<ActionResult<ApplicantProfileDTO>> UserProfilePut(UserProfileEditDTO body, string type)
+        public async Task<ActionResult<UserProfileDTO>> UserProfilePut(UserProfileEditDTO user, string email)
         {
-            // Реализация обновления профиля пользователя
-            throw new System.NotImplementedException();
+            var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == email);
+
+            if (temp == null)
+                throw new InvalidLoginException();
+
+            temp.FullName = user.FullName;
+            temp.Email = user.Email;
+            temp.NormalizedEmail = user.Email.Normalize();
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<UserProfileDTO>(temp);
         }
 
         public async Task<ActionResult<Response>> UserRegisterApplicantPost(ApplicantRegisterDTO body)
         {
-            // Реализация регистрации абитуриента
-            return new Response { Status = "200", Message = "VSE OK" };
+            var applicant = _mapper.Map<Applicant>(body);
+
+            var user = _mapper.Map<UserE>(body);
+            user.Id = new Guid();
+            user.NormalizedEmail = body.Email.Normalize();
+            user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
+            user.Roles.Add(RoleEnum.Applicant);
+
+            applicant.User = user;
+            applicant.Id = user.Id;
+
+            if (_IsUserInDb(user).Result)
+            {
+                throw new BadRequestException("user with that email is already in database");
+            }
+
+            await _context.Users.AddAsync(user);
+            await _context.Applicants.AddAsync(applicant);
+            await _context.SaveChangesAsync();
+
+            var result = await LoginUser(new LoginCredentials
+            {
+                Email = user.Email,
+                Password = user.Password,
+            });
+
+            return result;
         }
 
         public async Task<ActionResult<Response>> UserRegister(UserRegisterDTO body)
         {
             var user = _mapper.Map<UserE>(body);
             user.NormalizedEmail = body.Email.Normalize();
-            user.NormalizedUserName = body.FullName.Normalize();
+            user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
+            user.Roles.Add(RoleEnum.Manager);
 
             if (_IsUserInDb(user).Result)
             {

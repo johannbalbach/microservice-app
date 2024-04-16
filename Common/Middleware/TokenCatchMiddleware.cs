@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using User.Domain.Context;
 
 namespace Common.Middleware
 {
@@ -15,17 +14,15 @@ namespace Common.Middleware
             _logger = logger;
         }
 
-        public async Task InvokeAsync(HttpContext httpContext, AppDbContext dbContext)
+        public async Task InvokeAsync(HttpContext httpContext)
         {
-            Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-
             string? headerToken = httpContext.Request.Headers.Authorization;
 
             await _next(httpContext);
+            Console.WriteLine(httpContext.Request.Headers.Authorization);
 
             if (httpContext.Response.StatusCode == StatusCodes.Status401Unauthorized)
             {
-                Console.WriteLine($"{headerToken}");
                 string details = headerToken == null ? "Not Authenticated" : "Invalid Token";
 
                 httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;

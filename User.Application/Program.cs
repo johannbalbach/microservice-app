@@ -58,8 +58,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Подключение Identity с настройками для класса UserE
-builder.Services.AddIdentity<UserE, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
+builder.Services.AddIdentity<UserE, IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<AuthDbContext>()
     .AddDefaultTokenProviders();
 
 // Конфигурация JWT-токенов
@@ -95,10 +95,28 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(RoleEnum.Manager.ToString(), policy => policy.RequireClaim("UserRole", RoleEnum.Manager.ToString()));
     options.AddPolicy(RoleEnum.MainManager.ToString(), policy => policy.RequireClaim("UserRole", RoleEnum.MainManager.ToString()));
     options.AddPolicy(RoleEnum.Admin.ToString(), policy => policy.RequireClaim("UserRole", RoleEnum.Admin.ToString()));
+    options.AddPolicy("ApplicantOrManager", p =>
+    {
+        p.RequireAssertion(context =>
+        {
+            return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.Applicant.ToString())
+            || (claim.Type == "UserRole" && claim.Value == RoleEnum.Manager.ToString())
+            );
+        });
+    });
+    options.AddPolicy("Privileged", p =>
+    {
+        p.RequireAssertion(context =>
+        {
+            return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.Manager.ToString())
+            || (claim.Type == "UserRole" && claim.Value == RoleEnum.MainManager.ToString() || (claim.Type == "UserRole" && claim.Value == RoleEnum.Admin.ToString()))
+            );
+        });
+    });
 });
 
 // Подключение к базе данных
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
@@ -129,6 +147,8 @@ app.UseMiddleware<RoleMiddleware>();
 app.UseMiddleware<TokenCatchMiddleware>();
 
 app.UseAuthorization();
+
+app.UseExceptionHandler();
 
 app.MapControllers();
 
