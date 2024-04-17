@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.Models;
 
 namespace Shared.Interfaces
 {
@@ -13,5 +14,6 @@ namespace Shared.Interfaces
     {
         Task<ActionResult<List<FacultyDTO>>> GetFaculties();
         Task<ActionResult<List<ProgramDTO>>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query);
+        Task<ActionResult<Response<string>>> ImportDictionary(ImportDictionaryQuery query);
     }
 }

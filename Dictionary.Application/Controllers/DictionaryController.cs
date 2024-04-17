@@ -6,6 +6,7 @@ using Shared.Models;
 using Shared.DTO;
 using Shared.DTO.Query;
 using Shared.Interfaces;
+using Shared.Enums;
 
 namespace Dictionary.Application.Controllers
 {
@@ -26,10 +27,11 @@ namespace Dictionary.Application.Controllers
         {
             return new Response();
         }
-        [HttpPost]
-        public async Task<ActionResult<Response>> ImportDictionary([FromQuery][Required()] object file)
+        [HttpPost]  
+        public async Task<ActionResult<Response<string>>> ImportDictionary([FromQuery] ImportDictionaryQuery importType, ImportTypeEnum importType1)
         {
-            return new Response();
+           importType.ImportType = importType1;
+           return await _dictionaryService.ImportDictionary(importType);
         }
 
         [HttpGet]

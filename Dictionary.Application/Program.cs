@@ -115,8 +115,11 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<IRepository<UniversityProgram>, Repository<UniversityProgram>>();
 builder.Services.AddScoped<IRepository<Faculty>, Repository<Faculty>>();
+builder.Services.AddScoped<IRepository<EducationLevel>, Repository<EducationLevel>>();
+builder.Services.AddScoped<IRepository<DocumentType>, Repository<DocumentType>>();
 
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+builder.Services.AddScoped<IExternalSystemService, ExternalSystemService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
