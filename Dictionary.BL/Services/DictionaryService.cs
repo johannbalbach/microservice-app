@@ -16,23 +16,22 @@ using Shared.Enums;
 using Shared.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Shared.Models.Enums;
 
 namespace Dictionary.BL.Services
 {
     public class DictionaryService: IDictionaryService
     {
-        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        private readonly IRepository<UniversityProgram> _programRepository;
+        private readonly IProgramRepository<UniversityProgram> _programRepository;
         private readonly IRepository<Faculty> _facultyRepository;
         private readonly IRepository<EducationLevel> _educationLevelRepository;
         private readonly IRepository<DocumentType> _documentTypeRepository;
         private readonly IExternalSystemService _externalSystemService;
 
-        public DictionaryService(AppDbContext context, IMapper mapper, IRepository<UniversityProgram> programRepository, IRepository<Faculty> facultyRepository,
+        public DictionaryService(IMapper mapper, IProgramRepository<UniversityProgram> programRepository, IRepository<Faculty> facultyRepository,
             IRepository<EducationLevel> educationLevelRepository,  IExternalSystemService externalSystemService, IRepository<DocumentType> documentTypeRepository)
         {
-            _context = context;
             _mapper = mapper;
             _programRepository = programRepository;
             _facultyRepository = facultyRepository;
@@ -51,7 +50,6 @@ namespace Dictionary.BL.Services
                 ImportTypeEnum.Programs => await _externalSystemService.GetProgramsAsync(query.Page, query.Size),
                 _ => throw new BadRequestException("SSSSSSSSSSSSSSSSUUUUUUROVO")
             }; 
-            Console.WriteLine(response);
 
             switch (query.ImportType)
             {
@@ -74,13 +72,13 @@ namespace Dictionary.BL.Services
 
                     await _educationLevelRepository.SaveChangesAsync();
                     return new Response<string>("Successful import Education level", response);
-
                 case ImportTypeEnum.DocumentTypes:
                     var documentTypes = JsonConvert.DeserializeObject<List<DocumentType>>(response);
 
                     foreach (var doc in documentTypes)
                     {
                         doc.EducationLevel = await _educationLevelRepository.GetByIdIntAsync(doc.EducationLevel.Id);
+                        doc.CreatedTime = doc.CreatedTime.ToUniversalTime();
 
                         if (doc.NextEducationLevelId != null)
                         {
@@ -91,11 +89,11 @@ namespace Dictionary.BL.Services
                         if (existingDoc != null)
                         {
                             existingDoc.Name = doc.Name;
-                            // Обновляем также связанные объекты EducationLevel
                             existingDoc.EducationLevel = doc.EducationLevel;
                             existingDoc.NextEducationLevel = doc.NextEducationLevel;
                             existingDoc.EducationLevelId = doc.EducationLevel.Id;
                             existingDoc.NextEducationLevelId = doc.NextEducationLevel.Id;
+                            existingDoc.CreatedTime = doc.CreatedTime;
                             await _documentTypeRepository.UpdateAsync(existingDoc);
                         }
                         else
@@ -106,17 +104,17 @@ namespace Dictionary.BL.Services
 
                     await _documentTypeRepository.SaveChangesAsync();
                     return new Response<string>("Successful import document types", response);
-
                 case ImportTypeEnum.Faculties:
                     var faculties = JsonConvert.DeserializeObject<List<Faculty>>(response);
 
                     foreach (var faculty in faculties)
                     {
                         var existingFaculty = await _facultyRepository.GetByIdAsync(faculty.Id);
+                        faculty.createTime = faculty.createTime.ToUniversalTime();
                         if (existingFaculty != null)
                         {
                             existingFaculty.Name = faculty.Name;
-                            existingFaculty.CreatedDate = faculty.CreatedDate;
+                            existingFaculty.createTime = faculty.createTime;
                             await _facultyRepository.UpdateAsync(existingFaculty);
                         }
                         else
@@ -131,31 +129,45 @@ namespace Dictionary.BL.Services
                     var jsonObject = JObject.Parse(response);
 
                     var programsArray = jsonObject["programs"];
-                    var universityPrograms = JsonConvert.DeserializeObject<List<UniversityProgram>>(programsArray.ToString());
+                    var universityPrograms = JsonConvert.DeserializeObject<List<UniversityProgramDTO>>(programsArray.ToString());
 
                     foreach (var program in universityPrograms)
                     {
-                        program.Faculty = await _facultyRepository.GetByIdAsync(program.Faculty.Id);
-                        program.EducationLevel = await _educationLevelRepository.GetByIdIntAsync(program.EducationLevel.Id);
-
                         var existingProgram = await _programRepository.GetByIdAsync(program.Id);
+                        program.CreatedTime = program.CreatedTime.ToUniversalTime();
+
+                        var faculty = await _facultyRepository.GetByIdAsync(program.Faculty.Id);
+                        var educationLevel = await _educationLevelRepository.GetByIdIntAsync(program.EducationLevel.Id);
+
                         if (existingProgram != null)
                         {
-                            Console.WriteLine("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOK");
                             existingProgram.Name = program.Name;
-                            existingProgram.Code = program.Code;
+                            existingProgram.Code = program.Code == null ? "" : program.Code;
                             existingProgram.Language = program.Language;
-                            existingProgram.EducationForm = program.EducationForm;
+                            existingProgram.CreatedTime = program.CreatedTime;
+                            existingProgram.EducationForm = EducationFormConverter.ConvertToEducationFormEnum(program.EducationForm);
                             existingProgram.FacultyId = program.Faculty.Id;
-                            existingProgram.Faculty = program.Faculty;
-                            existingProgram.EducationLevel = program.EducationLevel;
+                            existingProgram.Faculty = faculty;
+                            existingProgram.EducationLevel = educationLevel;
                             existingProgram.EducationLevelId = program.EducationLevel.Id;
 
                             await _programRepository.UpdateAsync(existingProgram);
                         }
                         else
                         {
-                            await _programRepository.AddAsync(program);
+                            var entity = new UniversityProgram
+                            {
+                                Name = program.Name,
+                                Code = program.Code == null ? "" : program.Code,
+                                CreatedTime = program.CreatedTime,
+                                Language = program.Language,
+                                EducationForm = EducationFormConverter.ConvertToEducationFormEnum(program.EducationForm),
+                                FacultyId = program.Faculty.Id,
+                                Faculty = faculty,
+                                EducationLevel = educationLevel,
+                                EducationLevelId = program.EducationLevel.Id,
+                            };
+                            await _programRepository.AddAsync(entity);
                         }
                     }
 
@@ -175,10 +187,26 @@ namespace Dictionary.BL.Services
             return facultiesDTO;
         }
 
-        public async Task<ActionResult<List<ProgramDTO>>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query)
+        public async Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query)
         {
-            // Здесь можно реализовать логику получения списка программ с пагинацией и фильтрацией
-            throw new NotImplementedException();
+            var programs = await _programRepository.GetProgramsWithPaginationAndFiltering(query);
+
+            var programsDTO = new List<ProgramDTO>();
+
+            foreach (var program in programs)
+            {
+                var programDTO = _mapper.Map<ProgramDTO>(program);
+                var faculty = await _facultyRepository.GetByIdAsync(program.FacultyId);
+
+                programDTO.FacultyName = faculty.Name;
+                programDTO.EducationLevel = (EducationLevelEnum)program.EducationLevelId;
+
+                programsDTO.Add(programDTO);
+            }
+
+            var programsPagination = new ProgramWithPaginationInfo { Programs = programsDTO, size = query.Size, pageCurrent = query.Page, elementsCount = await _programRepository.ElementsCount()};
+
+            return programsPagination;
         }
     }
 }

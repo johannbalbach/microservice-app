@@ -117,7 +117,7 @@ builder.Services.AddAuthorization(options =>
 
 // Подключение к базе данных
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("AuthConnection")));
 
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -141,8 +141,6 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
-
-app.UseMiddleware<RoleMiddleware>();
 
 app.UseMiddleware<TokenCatchMiddleware>();
 

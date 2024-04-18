@@ -1,10 +1,19 @@
+using Common.Middleware;
 using Dictionary.BL.MappingProfile;
 using Dictionary.BL.Services;
 using Dictionary.Domain.Context;
 using Dictionary.Domain.Entities;
 using Dictionary.Domain.Repository;
-using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces;
+using Shared.JWT;
+using Shared.Models.Enums;
+using User.Domain.Context;
+using User.Domain.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,8 +27,7 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
 builder.Services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-/*builder.Services.AddSwaggerGen(options =>
+builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -50,7 +58,7 @@ builder.Services.AddSwaggerGen();
 
 // Подключение Identity с настройками для класса UserE
 builder.Services.AddIdentity<UserE, IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AppDbContext>()
+    .AddEntityFrameworkStores<AuthDbContext>()
     .AddDefaultTokenProviders();
 
 // Конфигурация JWT-токенов
@@ -105,15 +113,17 @@ builder.Services.AddAuthorization(options =>
         });
     });
 });
-*/
+
 // Подключение к базе данных
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AuthDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("AuthConnection")));
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-builder.Services.AddScoped<IRepository<UniversityProgram>, Repository<UniversityProgram>>();
+builder.Services.AddScoped<IProgramRepository<UniversityProgram>, ProgramRepository<UniversityProgram>>();
 builder.Services.AddScoped<IRepository<Faculty>, Repository<Faculty>>();
 builder.Services.AddScoped<IRepository<EducationLevel>, Repository<EducationLevel>>();
 builder.Services.AddScoped<IRepository<DocumentType>, Repository<DocumentType>>();
@@ -131,16 +141,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
 app.UseHttpsRedirection();
 
 app.UseRouting();
 
-/*app.UseAuthentication();
+app.UseAuthentication();
 
 app.UseMiddleware<TokenCatchMiddleware>();
 
-app.UseAuthorization();*/
+app.UseAuthorization();
 
 app.UseExceptionHandler();
 

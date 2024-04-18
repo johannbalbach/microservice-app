@@ -1,12 +1,13 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using Shared.Models;
 using Shared.DTO;
 using Shared.DTO.Query;
 using Shared.Interfaces;
 using Shared.Enums;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
+
 
 namespace Dictionary.Application.Controllers
 {
@@ -20,28 +21,22 @@ namespace Dictionary.Application.Controllers
         {
             _dictionaryService = enrollmentService;
         }
-
-        [HttpGet]
-        [Route("/dictionary/checkStatus/{importId}")]
-        public async Task<ActionResult<Response>> CheckDictionaryImportStatus([FromRoute][Required] Guid? importId)
-        {
-            return new Response();
-        }
+        [Authorize(Policy = "Admin")]
         [HttpPost]  
-        public async Task<ActionResult<Response<string>>> ImportDictionary([FromQuery] ImportDictionaryQuery importType, ImportTypeEnum importType1)
+        public async Task<ActionResult<Response<string>>> ImportDictionary([FromQuery]ImportTypeEnum importType1, int page, int size)
         {
-           importType.ImportType = importType1;
-           return await _dictionaryService.ImportDictionary(importType);
-        }
+            return await _dictionaryService.ImportDictionary(new ImportDictionaryQuery { ImportType = importType1, Page = page, Size = size });
 
+        }
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<FacultyDTO>>> GetFaculties()
         {
             return await _dictionaryService.GetFaculties();
         }
-
+        [Authorize(Policy = "ApplicantOrManager")]
         [HttpGet]
-        public async Task<ActionResult<List<ProgramDTO>>> GetListOfProgramsWithPaginationAndFiltering([FromQuery] ProgramsFilterQuery query)
+        public async Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering([FromQuery] ProgramsFilterQuery query)
         {
             return await _dictionaryService.GetListOfProgramsWithPaginationAndFiltering(query);
         }

@@ -6,7 +6,8 @@ namespace Shared.DTO
     public class ProgramWithPaginationInfo
     {
         public List<ProgramDTO> Programs { get; set; }
-        public long? TotalElements { get; set; }
-        public long? TotalPages { get; set; }
+        public int? size { get; set; }
+        public int? elementsCount { get; set; }
+        public int? pageCurrent { get; set; }
     }
 }

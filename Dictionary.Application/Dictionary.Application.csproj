@@ -17,9 +17,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +24,7 @@
     <ProjectReference Include="..\Dictionary.BL\Dictionary.BL.csproj" />
     <ProjectReference Include="..\Dictionary.Domain\Dictionary.Domain.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\User.Domain\UserMicroService\User.Domain.csproj" />
   </ItemGroup>
 
 </Project>

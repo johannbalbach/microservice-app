@@ -13,7 +13,7 @@ namespace Shared.Interfaces
     public interface IDictionaryService
     {
         Task<ActionResult<List<FacultyDTO>>> GetFaculties();
-        Task<ActionResult<List<ProgramDTO>>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query);
+        Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query);
         Task<ActionResult<Response<string>>> ImportDictionary(ImportDictionaryQuery query);
     }
 }

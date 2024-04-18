@@ -6,7 +6,7 @@ namespace Dictionary.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public DateTime? CreatedTime { get; set; }
+        public DateTime CreatedTime { get; set; }
         public string Name { get; set; }
         public int EducationLevelId { get; set; }
         public EducationLevel EducationLevel { get; set; } = null!;

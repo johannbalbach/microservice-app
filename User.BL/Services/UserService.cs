@@ -95,9 +95,9 @@ namespace User.BL.Services
                 await _context.SaveChangesAsync();  
             }
 
-            var manager = await _context.Managers.SingleOrDefaultAsync(a => a.Id == user.Id);
+
             RoleEnum role = RoleEnum.Applicant;
-            if (manager != null)
+            if (user.Roles.Contains(RoleEnum.Manager))
                 role = RoleEnum.Manager;
 
             var AccessToken = await _tokenService.GenerateAccessToken(login.Email, role);
