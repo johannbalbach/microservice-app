@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace EnrollmentMicroService.Migrations
+namespace Enrollment.Domain.Migrations
 {
     /// <inheritdoc />
     public partial class init : Migration
@@ -18,7 +18,7 @@ namespace EnrollmentMicroService.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ApplicantId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProgramId = table.Column<string>(type: "text", nullable: false),
+                    ProgramId = table.Column<Guid>(type: "uuid", nullable: false),
                     Priority = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     ManagerId = table.Column<Guid>(type: "uuid", nullable: true)

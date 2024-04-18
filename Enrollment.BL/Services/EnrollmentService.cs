@@ -1,6 +1,9 @@
-﻿using Enrollment.Domain.Models.Query;
+﻿using AutoMapper;
+using Enrollment.Domain.Models;
+using Enrollment.Domain.Models.Query;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
+using Shared.Exceptions;
 using Shared.Interfaces;
 using Shared.Models;
 using Shared.Models.DTO;
@@ -15,19 +18,26 @@ namespace Enrollment.BL.Services
 {
     public class EnrollmentService: IEnrollmentService
     {
-        public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid? admissionId)
+        private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
+        public EnrollmentService(AppDbContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+        }
+        public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId)
         {
             throw new NotImplementedException();
         }
-        public async Task<ActionResult<Response>> AssignManagerToApplicant(Guid? applicantId)
+        public async Task<ActionResult<Response>> AssignManagerToApplicant(Guid applicantId)
         {
             throw new NotImplementedException();
         }
-        public async Task<ActionResult<Response>> EditAdmissionStatus(StatusEnum body, Guid? id)
+        public async Task<ActionResult<Response>> EditAdmissionStatus(StatusEnum body, Guid id)
         {
             throw new NotImplementedException();
         }
-        public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions(Guid? id)
+        public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions(Guid id)
         {
             throw new NotImplementedException();
         }
@@ -35,11 +45,26 @@ namespace Enrollment.BL.Services
         {
             throw new NotImplementedException();
         }
-        public async Task<ActionResult<Response>> AddProgramToApplicantList(Guid? id)
+        public async Task<ActionResult<Response>> AddProgramToApplicantList(Guid id)
         {
+            if (_IsUserInDb(user).Result)
+            {
+                throw new BadRequestException("user with that email is already in database");
+            }
+
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
+            var result = await LoginUser(new LoginCredentials
+            {
+                Email = user.Email,
+                Password = user.Password,
+            });
+
+            return result;
             throw new NotImplementedException();
         }
-        public async Task<ActionResult<Response>> ChangeProgramPriority(int priority, Guid? id)
+        public async Task<ActionResult<Response>> ChangeProgramPriority(int priority, Guid id)
         {
             throw new NotImplementedException();
         }
@@ -47,7 +72,7 @@ namespace Enrollment.BL.Services
         {
             throw new NotImplementedException();
         }
-        public async Task<ActionResult<Response>> RemoveProgramFromApplicantList(Guid? id)
+        public async Task<ActionResult<Response>> RemoveProgramFromApplicantList(Guid id)
         {
             throw new NotImplementedException();
         }

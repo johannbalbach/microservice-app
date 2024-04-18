@@ -1,5 +1,5 @@
 
-namespace Document.Domain.Models
+namespace Shared.DTO
 {
     public class PassportCreateDTO
     {

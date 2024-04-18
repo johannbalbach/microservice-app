@@ -22,28 +22,28 @@ namespace Enrollment.Application.Controllers
 
         [HttpPut]
         [Route("/enrollment/assignManager/{admissionId}")]
-        public async Task<ActionResult<Response>> AssignManagerToAdmission([FromRoute][Required] Guid? admissionId)
+        public async Task<ActionResult<Response>> AssignManagerToAdmission([FromRoute][Required] Guid admissionId)
         {
             return await _enrollmentService.AssignManagerToAdmission(admissionId);
         }
 
         [HttpPut]
         [Route("/enrollment/assignManagerToApplicant/{applicantId}")]
-        public async Task<ActionResult<Response>> AssignManagerToApplicant([FromRoute][Required] Guid? applicantId)
+        public async Task<ActionResult<Response>> AssignManagerToApplicant([FromRoute][Required] Guid applicantId)
         {
             return await _enrollmentService.AssignManagerToApplicant(applicantId);
         }
 
         [HttpPut]
         [Route("/enrollment/editAdmissionStatus/{id}")]
-        public async Task<ActionResult<Response>> EditAdmissionStatus([FromBody] StatusEnum body, [FromRoute][Required] Guid? id)
+        public async Task<ActionResult<Response>> EditAdmissionStatus([FromBody] StatusEnum body, [FromRoute][Required] Guid id)
         {
             return await _enrollmentService.EditAdmissionStatus(body, id);
         }
 
         [HttpGet]
         [Route("/enrollment/getAdmissions/{id}")]
-        public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions([FromRoute][Required] Guid? id)
+        public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions([FromRoute][Required] Guid id)
         {
             return await _enrollmentService.GetApplicantAdmissions(id);
         }
@@ -62,21 +62,21 @@ namespace Enrollment.Application.Controllers
         }
         [HttpPost]
         [Route("api/applicant/addProgramToMyList/{id}")]
-        public async Task<ActionResult<Response>> AddProgramToApplicantList([FromRoute][Required] Guid? id)
+        public async Task<ActionResult<Response>> AddProgramToApplicantList([FromRoute][Required] Guid id)
         {
             return await _enrollmentService.AddProgramToApplicantList(id);
         }
 
         [HttpPut]
         [Route("api/applicant/changeProgramPriority/{id}")]
-        public async Task<ActionResult<Response>> ChangeProgramPriority([FromBody] int priority, [FromRoute][Required] Guid? id)
+        public async Task<ActionResult<Response>> ChangeProgramPriority([FromBody] int priority, [FromRoute][Required] Guid id)
         {
             return await _enrollmentService.ChangeProgramPriority(priority, id);
         }
 
         [HttpDelete]
         [Route("api/applicant/removeProgramFromMyList/{id}")]
-        public async Task<ActionResult<Response>> RemoveProgramFromApplicantList([FromRoute][Required] Guid? id)
+        public async Task<ActionResult<Response>> RemoveProgramFromApplicantList([FromRoute][Required] Guid id)
         {
             return await _enrollmentService.RemoveProgramFromApplicantList(id);
         }

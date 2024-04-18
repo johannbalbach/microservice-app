@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Shared.Models;
 using Shared.DTO;
-using Document.Domain.Models;
 using Shared.Interfaces;
 
 namespace Document.Application.Controllers
