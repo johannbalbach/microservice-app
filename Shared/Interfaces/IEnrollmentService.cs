@@ -9,9 +9,9 @@ namespace Shared.Interfaces
 {
     public interface IEnrollmentService
     {
-        Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId);
+        Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId, Guid managerId);
 
-        Task<ActionResult<Response>> AssignManagerToApplicant(Guid applicantId);
+        Task<ActionResult<Response>> AssignManagerToApplicant(Guid applicantId, Guid managerId);
 
         Task<ActionResult<Response>> EditAdmissionStatus(StatusEnum body, Guid id);
 

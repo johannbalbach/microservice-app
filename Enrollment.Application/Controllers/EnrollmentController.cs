@@ -22,16 +22,16 @@ namespace Enrollment.Application.Controllers
 
         [HttpPut]
         [Route("/enrollment/assignManager/{admissionId}")]
-        public async Task<ActionResult<Response>> AssignManagerToAdmission([FromRoute][Required] Guid admissionId)
+        public async Task<ActionResult<Response>> AssignManagerToAdmission([FromRoute][Required] Guid admissionId, Guid managerId)
         {
-            return await _enrollmentService.AssignManagerToAdmission(admissionId);
+            return await _enrollmentService.AssignManagerToAdmission(admissionId, managerId);
         }
 
         [HttpPut]
         [Route("/enrollment/assignManagerToApplicant/{applicantId}")]
-        public async Task<ActionResult<Response>> AssignManagerToApplicant([FromRoute][Required] Guid applicantId)
+        public async Task<ActionResult<Response>> AssignManagerToApplicant([FromRoute][Required] Guid applicantId, Guid managerId)
         {
-            return await _enrollmentService.AssignManagerToApplicant(applicantId);
+            return await _enrollmentService.AssignManagerToApplicant(applicantId, managerId);
         }
 
         [HttpPut]
