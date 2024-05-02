@@ -45,8 +45,6 @@ namespace User.BL.Services
                 throw new InvalidTokenException();
             }
         }
-
-
         public async Task<ActionResult<Response>> ChangePassword(string password, string email)
         {
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);

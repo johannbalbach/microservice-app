@@ -1,0 +1,28 @@
+{
+  "routes": [
+    {
+      "endpoint": "/auth",
+      "destination": {
+        "path": "http://localhost:5012/api/user/",
+        "requiresAuthentication": "false"
+      }
+    },
+    {
+      "endpoint": "/enrollment",
+      "destination": {  
+        "path": "http://localhost:5027/api/enrollment",
+        "requiresAuthentication": "true"
+      }
+    },
+    {
+      "endpoint": "/dictionary",
+      "destination": {
+        "path": "http://localhost:5277/api/dictionary",
+        "requiresAuthentication": "true"
+      }
+    }
+  ],
+  "authenticationService": {
+    "path": "http://localhost:8080/api/auth/"
+  }
+}

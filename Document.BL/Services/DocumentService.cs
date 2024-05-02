@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Document.Domain.Context;
+using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
 using Shared.Interfaces;
 using Shared.Models;
@@ -7,6 +8,11 @@ namespace Document.BL.Services
 {
     public class DocumentsService : IDocumentService
     {
+        private readonly DocumentContext _context;
+        public DocumentsService(DocumentContext context)
+        {
+            _context = context;
+        }
         public async Task<ActionResult<Response>> AddApplicantEducationDocument(DocumentCreateDTO body)
         {
             // Implement your logic here

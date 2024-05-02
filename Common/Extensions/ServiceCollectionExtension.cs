@@ -27,6 +27,19 @@ namespace Common.Extensions
             services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
             services.AddEndpointsApiExplorer();
 
+            services.AddExceptionHandler<GlobalExceptionHandler>();
+            services.AddProblemDetails();
+            //services.AddScoped<IRabbitMqService, RabbitMqService>();
+        }
+
+        public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDbContext<AuthDbContext>(options =>
+                options.UseNpgsql(configuration.GetConnectionString("AuthConnection")));
+        }
+
+        public static void AddAuth(this IServiceCollection services)
+        {
             // Добавление Swagger
             services.AddSwaggerGen(options =>
             {
@@ -112,17 +125,6 @@ namespace Common.Extensions
                     });
                 });
             });
-
-            services.AddExceptionHandler<GlobalExceptionHandler>();
-            services.AddProblemDetails();
-            services.AddScoped<IRabbitMqService, RabbitMqService>();
         }
-
-        public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddDbContext<AuthDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("AuthConnection")));
-        }
-
     }
 }

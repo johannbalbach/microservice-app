@@ -20,14 +20,14 @@ namespace Document.Application.Controllers
 
         [HttpPost]
         [Route("/documents/addEducationDocument")]
-        public async Task<ActionResult<Response>> AddApplicantEducationDocument([FromBody] DocumentCreateDTO body)
+        public async Task<ActionResult<Response>> AddApplicantEducationDocument([FromBody] DocumentCreateDTO body, [FromForm] IFormFile file)
         {
             return await _documentsService.AddApplicantEducationDocument(body);
         }
 
         [HttpPost]
         [Route("/documents/addPassport")]
-        public async Task<ActionResult<Response>> AddApplicantPassport([FromBody] PassportCreateDTO body)
+        public async Task<ActionResult<Response>> AddApplicantPassport([FromBody] PassportCreateDTO body, [FromForm] IFormFile file)
         {
             return await _documentsService.AddApplicantPassport(body);
         }
