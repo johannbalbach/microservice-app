@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Shared.JWT
 {
-    public class JWTConfiguration
+    public static class JWTConfiguration
     {
         public const string Issuer = "Issuer";
         public const string Audience = "Audience";

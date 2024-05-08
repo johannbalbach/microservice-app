@@ -17,12 +17,10 @@ namespace User.Application.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IRabbitMqService _mqService;
 
-        public UserController(IUserService userService, IRabbitMqService mqService)
+        public UserController(IUserService userService)
         {
             _userService = userService;
-            _mqService = mqService;
         }
 
         [Authorize]
@@ -88,13 +86,11 @@ namespace User.Application.Controllers
             return await _userService.UserRegister(body);
         }
 
-        [Route("[action]/{message}")]
-        [HttpGet]
-        public IActionResult SendMessage(string message)
+        [Authorize]
+        [HttpPost]
+        public async Task<ActionResult<Response>> CHECK()
         {
-            _mqService.SendMessage(message);
-
-            return Ok("Сообщение отправлено");
+            return new Response("OKOK");
         }
     }
 }

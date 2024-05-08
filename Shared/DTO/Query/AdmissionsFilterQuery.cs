@@ -9,10 +9,10 @@ namespace Enrollment.Domain.Models.Query
         public int? Page { get; set; }
         public int? Size { get; set; }
         public Guid? ProgramId { get; set; }
-        public Guid? FacultyId { get; set; }
         [EnumDataType(typeof(StatusEnum))]
-        public StatusEnum Status { get; set; }
+        public StatusEnum? Status { get; set; }
         public bool? UnassignedOnly { get; set; }
+        public bool? FirstPriorityOnly { get; set; }
         public SortEnum SortBy { get; set; }
     }
 }

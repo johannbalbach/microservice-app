@@ -2,6 +2,7 @@
 {
     public enum SortEnum
     {
-
+        CreatedTimeAsc = 0,
+        CreatedTimeDesc = 1
     }
 }

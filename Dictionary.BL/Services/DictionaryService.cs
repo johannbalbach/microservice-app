@@ -199,7 +199,8 @@ namespace Dictionary.BL.Services
                 var faculty = await _facultyRepository.GetByIdAsync(program.FacultyId);
 
                 programDTO.FacultyName = faculty.Name;
-                programDTO.EducationLevel = (EducationLevelEnum)program.EducationLevelId;
+                var educationLevel = (EducationLevel) await _educationLevelRepository.GetByIdIntAsync(program.EducationLevelId);
+                programDTO.EducationLevel = educationLevel.Name;
 
                 programsDTO.Add(programDTO);
             }

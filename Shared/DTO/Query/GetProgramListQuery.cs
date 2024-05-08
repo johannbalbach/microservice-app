@@ -9,7 +9,7 @@ namespace Shared.DTO.Query
         public int? Size { get; set; }
         public long? FacultyId { get; set; }
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public EducationLevelEnum? EducationLevel { get; set; }
+        public int? EducationLevelId { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public EducationFormEnum? EducationForm { get; set; }

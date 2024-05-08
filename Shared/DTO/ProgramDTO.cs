@@ -13,7 +13,7 @@ namespace Shared.DTO
         public string Code { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public EducationLevelEnum? EducationLevel { get; set; }
+        public string? EducationLevel { get; set; }
         public string Language { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

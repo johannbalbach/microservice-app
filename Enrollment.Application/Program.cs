@@ -1,30 +1,35 @@
+using Common.Extensions;
 using Common.Middleware;
+using Common.ServiceBus;
+using Enrollment.BL.MappingProfile;
 using Enrollment.BL.Services;
 using Enrollment.Domain.Models;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+builder.Services.AddMassTransit(x =>
 {
-    options.SuppressMapClientErrors = true;
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(new Uri("rabbitmq://localhost"), h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+    });
 });
-builder.Services.AddControllersWithViews().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddCommonServices();
+builder.Services.AddAuth();
+
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
@@ -38,6 +43,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseAuthentication();
+
+app.UseMiddleware<TokenCatchMiddleware>();
 
 app.UseAuthorization();
 

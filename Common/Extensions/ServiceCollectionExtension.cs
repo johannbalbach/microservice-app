@@ -1,4 +1,5 @@
-﻿using Common.ServiceBus;
+﻿using MassTransit;
+using MassTransit.AspNetCoreIntegration.HealthChecks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,6 @@ using Shared.JWT;
 using Shared.Models.Enums;
 using System.Text.Json.Serialization;
 using User.Domain.Context;
-using User.Domain.Entities;
 
 namespace Common.Extensions
 {
@@ -69,11 +69,6 @@ namespace Common.Extensions
                 }
             });
             });
-
-            // Добавление Identity и конфигурации JWT-токенов
-            services.AddIdentity<UserE, IdentityRole<Guid>>()
-                .AddEntityFrameworkStores<AuthDbContext>()
-                .AddDefaultTokenProviders();
 
             services.AddAuthentication(options =>
             {

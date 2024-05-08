@@ -2,7 +2,7 @@
 
 namespace Shared.Models.Enums
 {
-    public enum EducationLevelEnum
+    public enum EducationLevelEnum123
     {
         [EnumMember(Value = "bachelor")]
         Bachelor = 0,

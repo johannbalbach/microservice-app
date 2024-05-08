@@ -1,15 +1,13 @@
 using Newtonsoft.Json;
-using Shared.Enum;
-using Shared.Models.Enums;
 
 namespace Shared.DTO
 {
     public class DocumentCreateDTO
     {
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public DocumentTypeEnum? DocumentType { get; set; }
+        public Guid DocumentTypeId { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public EducationLevelEnum? EducationLevel { get; set; }
+        public int EducationLevelId { get; set; }
     }
 }

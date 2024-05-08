@@ -1,14 +1,36 @@
 using Common.Extensions;
 using Common.Middleware;
+using Common.ServiceBus;
+using MassTransit;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces;
 using User.BL.MappingProfile;
 using User.BL.Services;
 using User.Domain.Context;
+using User.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(new Uri("rabbitmq://localhost"), h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+        cfg.ConfigureEndpoints(context);
+    });
+    x.AddConsumer<GetUserConsumer>();
+});
+
 builder.Services.AddCommonServices();
+// Добавление Identity и конфигурации JWT-токенов
+builder.Services.AddIdentity<UserE, IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<AuthDbContext>()
+    .AddDefaultTokenProviders();
 builder.Services.AddAuth();
 
 // Подключение к базе данных
@@ -17,6 +39,7 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRequests, UserRequestService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();

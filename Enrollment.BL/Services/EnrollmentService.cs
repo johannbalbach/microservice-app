@@ -1,21 +1,22 @@
 ﻿using AutoMapper;
 using Enrollment.Domain.Entities;
 using Enrollment.Domain.Models;
+using Enrollment.Domain.Models.Enum;
 using Enrollment.Domain.Models.Query;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.DTO;
+using Shared.DTO.ServiceBusDTO;
+using Shared.Enums;
 using Shared.Exceptions;
 using Shared.Interfaces;
-using Shared.Models;
 using Shared.Models.DTO;
 using Shared.Models.Enums;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using User.BL.Services;
+using User.Domain.Entities;
+using Response = Shared.Models.Response;
 
 namespace Enrollment.BL.Services
 {
@@ -23,21 +24,26 @@ namespace Enrollment.BL.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        public EnrollmentService(AppDbContext context, IMapper mapper)
+        private readonly IRequestClient<GetUserDTO> _getUserRequestClient;
+
+        public EnrollmentService(AppDbContext context, IMapper mapper, IBus bus)
         {
             _context = context;
             _mapper = mapper;
+            _getUserRequestClient = bus.CreateRequestClient<GetUserDTO>();
         }
         public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId, Guid managerId)
         {
+            var user = await GetUser(managerId);
             var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.Id == admissionId);
-
-            if (await isUserExist(managerId))
-                throw new BadRequestException("this manager doesnt exist");
+            
+            if (!user.Roles.Contains(RoleEnum.Manager))
+                throw new BadRequestException("this user is not manager");
             if (existAdmission == null)
                 throw new BadRequestException("this admissions doesnt exist");
-/*            if (existAdmission.ManagerId == managerId)
-                throw new BadRequestException("this manager is already assigned to this admission");*/
+            if (existAdmission.ManagerId != null)
+                if (existAdmission.ManagerId == managerId)
+                    return new Response("this manager is already assigned to this admission");
 
             existAdmission.ManagerId = managerId;
             await _context.SaveChangesAsync();
@@ -46,10 +52,14 @@ namespace Enrollment.BL.Services
         }
         public async Task<ActionResult<Response>> AssignManagerToApplicant(Guid applicantId, Guid managerId)
         {
+            var applicant = await GetUser(applicantId);
+            var manager = await GetUser(managerId);
             var existAdmissions = await _context.Admissions.Where(a => a.ApplicantId == applicantId).ToListAsync();
 
-            if (await isUserExist(applicantId))
-                throw new BadRequestException("this applicant doesnt exist");
+            if (!applicant.Roles.Contains(RoleEnum.Applicant))
+                throw new BadRequestException("this user is not applicant");
+            if (!manager.Roles.Contains(RoleEnum.Manager))
+                throw new BadRequestException("this user is not manager");
             if (existAdmissions == null)
                 throw new BadRequestException("this user have no admissions");
 
@@ -57,9 +67,8 @@ namespace Enrollment.BL.Services
 
             return new Response("manager successfully assigned to all admissions of this applicant");
         }
-        public async Task<ActionResult<Response>> EditAdmissionStatus(StatusEnum body, Guid id)
+        public async Task<ActionResult<Response>> EditAdmissionStatus(StatusEnum body, Guid id, string email)
         {
-            var userId = await GetUserId();
             var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.Id == id);
 
             if (existAdmission == null)
@@ -74,13 +83,19 @@ namespace Enrollment.BL.Services
         }
         public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions(Guid id)
         {
-            var userId = await GetUserId();
+            var admissions = await _context.Admissions.Where(a => a.ApplicantId == id).ToListAsync();
+            if (admissions == null)
+                throw new BadRequestException("this user didnt exist or he havent any admission");
 
-            var admissions = await _context.Admissions.Where(a => a.ApplicantId == userId).ToListAsync();
+            var admissionsDTO = new List<AdmissionDTO>();
 
-            var result = _mapper.Map<List<Admission>, List<AdmissionDTO>>(admissions);
+            foreach (var adm in admissions)
+            {
+                var admDTO = _mapper.Map<AdmissionDTO>(adm);
 
-            return result;
+                admissionsDTO.Add(admDTO);
+            }
+            return admissionsDTO;
         }
         public async Task<ActionResult<AdmissionWithPaginationInfo>> GetListOfAdmissionsWithPaginationFilteringAndSorting(AdmissionsFilterQuery query)
         {
@@ -90,10 +105,6 @@ namespace Enrollment.BL.Services
             {
                 admissionsQuery = admissionsQuery.Where(a => a.ProgramId == query.ProgramId);
             }
-            if (query.FacultyId != null)
-            {
-                //admissionsQuery = admissionsQuery.Where(a => a.P);
-            }
             if (query.Status != null)
             {
                 admissionsQuery = admissionsQuery.Where(a => a.Status == query.Status);
@@ -102,41 +113,38 @@ namespace Enrollment.BL.Services
             {
                 admissionsQuery = admissionsQuery.Where(a => a.ManagerId == null);
             }
-
-/*            if (!string.IsNullOrEmpty(query.SortBy))
+            if (query.FirstPriorityOnly == true)
             {
-                switch (query.SortBy.ToLower())
+                admissionsQuery = admissionsQuery.Where(a => a.Priority == 1);
+            }
+
+            if (query.SortBy != null)
+            {
+                admissionsQuery = query.SortBy switch
                 {
-                    case "createdtime":
-                        admissionsQuery = admissionsQuery.OrderBy(a => a.CreatedTime);
-                        break;
-                    case "priority":
-                        admissionsQuery = admissionsQuery.OrderBy(a => a.Priority);
-                        break;
-                    default:
-                        break;
-                }
-            }*/
+                    SortEnum.CreatedTimeAsc => admissionsQuery.OrderBy(a => a.CreatedTime),
+                    SortEnum.CreatedTimeDesc => admissionsQuery.OrderByDescending(a => a.CreatedTime),
+                    _ => admissionsQuery.OrderBy(a => a.CreatedTime)
+                };
+            }
 
             var pageNumber = query.Page ?? 1;
             var pageSize = query.Size ?? 10;
             var totalCount = await admissionsQuery.CountAsync();
             var admissions = await admissionsQuery.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            var admissionDTOs = admissions.Select(a => new AdmissionDTO
+            var admissionsDtos = new List<AdmissionDTO>();
+            foreach (var adm in admissions)
             {
-                Id = a.Id,
-                ApplicantId = a.ApplicantId,
-                CreatedTime = a.CreatedTime,
-                ProgramId = a.ProgramId,
-                Priority = a.Priority,
-                Status = a.Status,
-                ManagerId = a.ManagerId
-            }).ToList();
+                var admDto = _mapper.Map<AdmissionDTO>(adm);
+
+                admissionsDtos.Add(admDto);
+            }
+
 
             var admissionWithPaginationInfo = new AdmissionWithPaginationInfo
             {
-                Admissions = admissionDTOs,
+                Admissions = admissionsDtos,
                 elementsCount = totalCount,
                 pageCurrent = pageNumber,
                 size = pageSize
@@ -144,10 +152,11 @@ namespace Enrollment.BL.Services
 
             return admissionWithPaginationInfo;
         }
-        public async Task<ActionResult<Response>> AddProgramToApplicantList(Guid id)
+        public async Task<ActionResult<Response>> AddProgramToMyList(Guid id, string email)
         {
-            var userId = await GetUserId();
-            var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.ProgramId == id && a.ApplicantId == userId);
+            var user = await GetUser(email);
+            var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.ProgramId == id && a.ApplicantId == user.Id);
+            //запрос на проверку существование такого 
             
             if (existAdmission != null)
             {
@@ -156,10 +165,10 @@ namespace Enrollment.BL.Services
 
             var admission = new Admission{
                 Id = Guid.NewGuid(),
-                ApplicantId = userId,
+                ApplicantId = user.Id,
                 CreatedTime = DateTime.UtcNow,
                 ProgramId = id,
-                Priority = await CalculatePriority(),
+                Priority = await MaxPriority(user.Id) + 1,
                 Status = StatusEnum.Created,
             };
 
@@ -168,42 +177,57 @@ namespace Enrollment.BL.Services
 
             return new Response("Admission successfully created");
         }
-        public async Task<ActionResult<Response>> ChangeProgramPriority(int priority, Guid id)
+        public async Task<ActionResult<Response>> ChangeProgramPriority(int priority, Guid id, string email)
         {
-            var userId = await GetUserId();
+            var user = await GetUser(email);
             var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.Id == id);
-
+            if (priority <= 0)
+                throw new BadRequestException("priority should be > 0");
+            if (await _context.Admissions.Where(a => a.ApplicantId == user.Id).CountAsync() == null)
+                throw new BadRequestException("you dont have any admission");
+            if (priority > await _context.Admissions.Where(a => a.ApplicantId == user.Id).CountAsync())
+                throw new BadRequestException("priority should be < then max admissions count");
             if (existAdmission == null)
-            {
                 throw new BadRequestException("this admission doesnt exist");
-            }
+            if (existAdmission.ManagerId != user.Id || user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin))
+                throw new BadRequestException("you havent enough rights to edit this admission");
 
             existAdmission.Priority = priority;
 
-            var userAdmissions = await _context.Admissions.Where(a => a.ApplicantId == userId).ToListAsync();
-            userAdmissions.ForEach(async a => a.Priority = await CalculatePriority());
+            var userAdmissions = await _context.Admissions.Where(a => a.ApplicantId == existAdmission.ApplicantId && a.Id != existAdmission.Id && a.Priority>= priority).ToListAsync();
+            if (userAdmissions != null)
+                userAdmissions.ForEach(a => a.Priority = priority+1);
 
             await _context.SaveChangesAsync();
 
             return new Response("priority successfully changed");
         }
-        public async Task<ActionResult<List<ApplicantProgramDTO>>> GetApplicantPrograms()
+        public async Task<ActionResult<List<AdmissionDTO>>> GetMyAdmissions(string email)
         {
-            var userId = await GetUserId();
+            var user = await GetUser(email);
 
-            var admissions = await _context.Admissions.Where(a => a.ApplicantId == userId).ToListAsync();
+            var admissions = await _context.Admissions.Where(a => a.ApplicantId == user.Id).ToListAsync();
+            var admissionsDtos = new List<AdmissionDTO>();
+            foreach (var adm in admissions)
+            {
+                var admDto = _mapper.Map<AdmissionDTO>(adm);
 
-            //var result = ;
-            throw new NotImplementedException();
+                admissionsDtos.Add(admDto);
+            }
+
+            return admissionsDtos;
         }
-        public async Task<ActionResult<Response>> RemoveProgramFromApplicantList(Guid id)
+        public async Task<ActionResult<Response>> RemoveAdmissionFromApplicantList(Guid id, string email)
         {
-            var userId = await GetUserId();
-            var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.ProgramId == id && a.ApplicantId == userId);
+            var user = await GetUser(email);
+            var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.ProgramId == id);
 
             if (existAdmission == null)
-            {
                 throw new BadRequestException("this admission doesnt exist");
+            if (!(user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin)))
+            {
+                if (existAdmission.ApplicantId != user.Id && existAdmission.ManagerId != user.Id)
+                    throw new BadRequestException("you haven enough rights to remove this admission");
             }
 
             _context.Remove(existAdmission);
@@ -212,24 +236,24 @@ namespace Enrollment.BL.Services
             return new Response("Admission successfully removed");
         }
 
-        private async Task<Guid> GetUserId()
+        public async Task<UserRights> GetUser(string email)
         {
-            throw new BadRequestException("this user is not applicant");
-            throw new BadRequestException("user doesnt exist");
-            //add logic
-            return Guid.NewGuid();
+            var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTO { Email = email });
+
+            return response.Message;
         }
-        private async Task<int> CalculatePriority()
+        public async Task<UserRights> GetUser(Guid id)
         {
-            //add logic
-            return 0;
+            var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTO { UserId = id });
+            return response.Message;
         }
-        private async Task<bool> isUserExist(Guid Id)
+        private async Task<int> MaxPriority(Guid id)
         {
-            throw new BadRequestException("this user is not applicant");
-            throw new BadRequestException("user doesnt exist");
-            //add logic
-            return true;
+           return await _context.Admissions
+                .Where(a => a.ApplicantId == id)
+                .Select(a => a.Priority)
+                .DefaultIfEmpty(0)
+                .MaxAsync();
         }
     }
 }
