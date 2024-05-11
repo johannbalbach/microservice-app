@@ -1,6 +1,6 @@
 using Common.Extensions;
 using Common.Middleware;
-using Common.ServiceBus;
+using Enrollment.BL.Consumers;
 using Enrollment.BL.MappingProfile;
 using Enrollment.BL.Services;
 using Enrollment.Domain.Models;
@@ -19,7 +19,9 @@ builder.Services.AddMassTransit(x =>
             h.Username("guest");
             h.Password("guest");
         });
+        cfg.ConfigureEndpoints(context);
     });
+    x.AddConsumer<GetManagerAccessConsumer>();
 });
 builder.Services.AddCommonServices();
 builder.Services.AddAuth();

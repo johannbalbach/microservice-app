@@ -1,16 +1,14 @@
-
-using Shared.Validators;
-
-namespace Shared.DTO
+п»їnamespace Shared.DTO
 {
-    public class PassportCreateDTO
+    public class PassportViewDTO
     {
-        [SeriesNumberPassportValidation]
+        public Guid Id { get; set; }
+        public Guid ApplicantId { get; set; }
         public string SeriesNumber { get; set; }
         public string IssuedBy { get; set; }
         public DateOnly IssuedDate { get; set; }
         public DateOnly BirthDate { get; set; }
         public string PlaceOfBirth { get; set; }
-        //^([0-9]{3}[-]{1}[0-9]{3})?$ код подразделения
+        public List<Guid> FilesId { get; set; } = new List<Guid>();
     }
 }

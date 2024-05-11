@@ -57,9 +57,9 @@ namespace Dictionary.Domain.Repository
                 programsQuery = programsQuery.Where(p => p.FacultyId == query.FacultyId);
             }
 
-            if (query.educationLevel != null)
+            if (query.educationLevelId != null)
             {
-                programsQuery = programsQuery.Where(p => p.EducationLevel.Name == query.educationLevel.ToString());
+                programsQuery = programsQuery.Where(p => p.EducationLevel.Id == query.educationLevelId);
             }
 
             if (query.educationForm != null)

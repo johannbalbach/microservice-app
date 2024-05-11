@@ -1,9 +1,8 @@
-
-using Shared.Validators;
+п»їusing Shared.Validators;
 
 namespace Shared.DTO
 {
-    public class PassportCreateDTO
+    public class PassportEditDTO
     {
         [SeriesNumberPassportValidation]
         public string SeriesNumber { get; set; }
@@ -11,6 +10,5 @@ namespace Shared.DTO
         public DateOnly IssuedDate { get; set; }
         public DateOnly BirthDate { get; set; }
         public string PlaceOfBirth { get; set; }
-        //^([0-9]{3}[-]{1}[0-9]{3})?$ код подразделения
     }
 }

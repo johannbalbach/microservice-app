@@ -1,16 +1,26 @@
-using Common.Extensions;
-using Common.Middleware;
 using Document.BL.Services;
 using Document.Domain.Context;
 using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces;
+using Common.Extensions;
+using Common.Middleware;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(new Uri("rabbitmq://localhost"), h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+    });
+});
 builder.Services.AddCommonServices();
-builder.Services.AddSwaggerGen();
 
-// Подключение к базе данных
 builder.Services.AddDbContext<DocumentContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -25,6 +35,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 app.UseHttpsRedirection();
 
 app.UseRouting();
@@ -38,4 +49,3 @@ app.UseExceptionHandler();
 app.MapControllers();
 
 app.Run();
-

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Shared.Interfaces
 {
-    public interface IUserRequests
+    public interface IUserRequestsService
     {
         Task<UserRights> GetUserRights(string email);
         Task<UserRights> GetUserRights(Guid Id);

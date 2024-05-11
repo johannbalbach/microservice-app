@@ -1,14 +1,24 @@
 namespace Document.Domain.Entities
 {
-    public class Passport
+    public class Passport: Document
     {
-        public Guid Id { get; set; }
-        public Guid ApplicantId { get; set; }
-        public string Series { get; set; }
-        public string Number { get; set; }
+        public Passport()
+        {
+            DocumentType = Shared.Enums.DocumentType.Passport;
+        }
+        public Passport(string seriesnumber, string issuedby, string placeofbirth, DateOnly issueddate, DateOnly birthdate)
+        {
+            DocumentType = Shared.Enums.DocumentType.Passport;
+            SeriesNumber = seriesnumber;
+            IssuedBy = issuedby;
+            IssuedDate = issueddate;
+            BirthDate = birthdate;
+            PlaceOfBirth = placeofbirth;
+        }
+        public string SeriesNumber { get; set; }
         public string IssuedBy { get; set; }
-        public string BirthDate { get; set; }
+        public DateOnly IssuedDate {  get; set; }
+        public DateOnly BirthDate { get; set; }
         public string PlaceOfBirth { get; set; }
-        public List<Guid?> ScansId { get; set; }
     }
 }

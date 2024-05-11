@@ -7,7 +7,6 @@ using Dictionary.Domain.Repository;
 using Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Common.Extensions;
-using Common.ServiceBus;
 
 var builder = WebApplication.CreateBuilder(args);
 

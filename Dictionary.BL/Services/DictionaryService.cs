@@ -5,11 +5,6 @@ using Dictionary.Domain.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO.Query;
 using Shared.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Shared.Interfaces;
 using Shared.Models;
 using Shared.Enums;
@@ -17,6 +12,7 @@ using Shared.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Models.Enums;
+using DocumentType = Dictionary.Domain.Entities.DocumentType;
 
 namespace Dictionary.BL.Services
 {

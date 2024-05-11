@@ -13,7 +13,7 @@ using User.Domain.Context;
 
 namespace User.BL.Services
 {
-    public class UserRequestService: IUserRequests
+    public class UserRequestService: IUserRequestsService
     {
         private readonly AuthDbContext _context;
         public UserRequestService(AuthDbContext context)

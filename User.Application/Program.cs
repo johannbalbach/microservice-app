@@ -1,6 +1,5 @@
 using Common.Extensions;
 using Common.Middleware;
-using Common.ServiceBus;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +38,7 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRequests, UserRequestService>();
+builder.Services.AddScoped<IUserRequestsService, UserRequestService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();

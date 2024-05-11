@@ -13,6 +13,7 @@ namespace Document.Domain.Context
 
         public DbSet<EducationDocument> EducationDocuments { get; set; }
         public DbSet<Passport> Passports { get; set; }
+        public DbSet<FileDocument> fileDocuments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

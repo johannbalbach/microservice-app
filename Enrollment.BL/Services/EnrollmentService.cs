@@ -24,13 +24,13 @@ namespace Enrollment.BL.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        private readonly IRequestClient<GetUserDTO> _getUserRequestClient;
+        private readonly IRequestClient<GetUserDTORequest> _getUserRequestClient;
 
         public EnrollmentService(AppDbContext context, IMapper mapper, IBus bus)
         {
             _context = context;
             _mapper = mapper;
-            _getUserRequestClient = bus.CreateRequestClient<GetUserDTO>();
+            _getUserRequestClient = bus.CreateRequestClient<GetUserDTORequest>();
         }
         public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId, Guid managerId)
         {
@@ -235,16 +235,15 @@ namespace Enrollment.BL.Services
 
             return new Response("Admission successfully removed");
         }
-
-        public async Task<UserRights> GetUser(string email)
+        private async Task<UserRights> GetUser(string email)
         {
-            var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTO { Email = email });
+            var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTORequest { Email = email });
 
             return response.Message;
         }
-        public async Task<UserRights> GetUser(Guid id)
+        private async Task<UserRights> GetUser(Guid id)
         {
-            var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTO { UserId = id });
+            var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTORequest { UserId = id });
             return response.Message;
         }
         private async Task<int> MaxPriority(Guid id)

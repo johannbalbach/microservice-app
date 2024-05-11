@@ -1,13 +1,17 @@
-using Shared.Enum;
-using System.Text.Json.Serialization;
-
 namespace Document.Domain.Entities
 {
-    public class EducationDocument
+    public class EducationDocument: Document
     {
-        public Guid Id { get; set; }
-        public Guid ApplicantId { get; set; }
-        public DocumentTypeEnum DocumentType { get; set; }
-        public List<Guid?> ScansId { get; set; }
+        public EducationDocument() {
+            DocumentType = Shared.Enums.DocumentType.EducationDoc;
+        }
+        public EducationDocument(string name, Guid doctype)
+        {
+            DocumentType = Shared.Enums.DocumentType.EducationDoc;
+            Name = name;
+            DocumentTypeGuid = doctype;
+        }
+        public string Name { get; set; }
+        public Guid DocumentTypeGuid { get; set; }
     }
 }
