@@ -11,6 +11,7 @@ using Common.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCommonServices();
+builder.Services.AddAuth();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -39,6 +40,8 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
+
+app.UseMiddleware<TokenCatchMiddleware>();
 
 app.UseAuthorization();
 

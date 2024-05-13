@@ -1,28 +1,46 @@
 {
-  "routes": [
-    {
-      "endpoint": "/auth",
-      "destination": {
-        "path": "http://localhost:5012/api/user/",
-        "requiresAuthentication": "false"
-      }
-    },
-    {
-      "endpoint": "/enrollment",
-      "destination": {  
-        "path": "http://localhost:5027/api/enrollment",
-        "requiresAuthentication": "true"
-      }
-    },
-    {
-      "endpoint": "/dictionary",
-      "destination": {
-        "path": "http://localhost:5277/api/dictionary",
-        "requiresAuthentication": "true"
-      }
-    }
-  ],
-  "authenticationService": {
-    "path": "http://localhost:8080/api/auth/"
+  "DictionaryController": {
+    //http://localhost:5277
+    "ImportDictionary": "/api/dictionary/ImportDictionary",
+    "GetFaculties": "/api/dictionary/GetFaculties",
+    "GetListOfProgramsWithPaginationAndFiltering": "/api/dictionary/GetListOfProgramsWithPaginationAndFiltering"
+  },
+  "DocumentsController": {
+    //http://localhost:5197
+    "AddApplicantEducationDocument": "/documents/addEducationDocument",
+    "AddApplicantPassport": "/documents/addPassport",
+    "DeleteDocumentScan": "/documents/deleteScan/{ScanId}",
+    "DownloadDocumentScan": "/documents/download/{ScanId}",
+    "UploadDocumentScan": "/documents/upload/{documentId}",
+    "EditPassport": "/documents/editPassport/",
+    "EditApplicantPassport": "/documents/{applicantId}/editPassport/",
+    "EditEducationDocument": "/documents/editEducationDocument/",
+    "EditApplicantEducationDocument": "/documents/{applicantId}/editEducationDocument/",
+    "GetEducationDocument": "/documents/getEducationDocument/{DocumentTypeId}",
+    "GetApplicantEducationDocument": "/documents/{ApplicantId}/getEducationDocument/{DocumentTypeId}",
+    "GetPassport": "/documents/getPassport",
+    "GetApplicantPassport": "/documents/{ApplicantId}/getPassport"
+  },
+  "EnrollmentController": {
+    //http://localhost:5027
+    "AssignManagerToAdmission": "/enrollment/assignManager/{admissionId}",
+    "AssignManagerToApplicant": "/enrollment/assignManagerToApplicant/{applicantId}",
+    "EditAdmissionStatus": "/enrollment/editAdmissionStatus/{id}",
+    "GetApplicantAdmissions": "/enrollment/getAdmissions/{id}",
+    "GetListOfAdmissionsWithPaginationFilteringAndSorting": "/enrollment/getListOfAdmissions",
+    "GetMyPrograms": "/enrollment/getMyPrograms",
+    "AddProgramToApplicantList": "/enrollment/addProgramToMyList/{id}",
+    "ChangeProgramPriority": "/enrollment/changeProgramPriority/{id}",
+    "RemoveProgramFromApplicantList": "/enrollment/removeProgramFromMyList/{id}"
+  },
+  "UserController": {
+    //http://localhost:5012
+    "ChangePassword": "/user/changePassword",
+    "Logout": "/user/logout",
+    "Login": "/user/login",
+    "GetProfile": "/user/getProfile",
+    "PutProfile": "/user/putProfile",
+    "RegisterApplicant": "/user/registerApplicant",
+    "RegisterUser": "/user/registerUser"
   }
 }

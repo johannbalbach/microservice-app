@@ -8,9 +8,7 @@ namespace Dictionary.Domain.Entities
         public Guid Id { get; set; }
         public DateTime CreateTime { get; set; }
         public string Name { get; set; }
-        public int EducationLevelId { get; set; }
         public EducationLevel EducationLevel { get; set; } = null!;
-        public List<int> NextEducationLevelsId { get; set; } = new List<int>();
         public List<EducationLevel>? NextEducationLevels { get; set;} = null!;
     }
 }

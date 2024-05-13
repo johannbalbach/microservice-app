@@ -21,17 +21,22 @@ namespace Dictionary.Application.Controllers
         {
             _dictionaryService = enrollmentService;
         }
-        [HttpPost]  
+
+        [HttpPost]
         public async Task<ActionResult<Response<string>>> ImportDictionary([FromQuery]ImportTypeEnum importType1, int page, int size)
         {
             return await _dictionaryService.ImportDictionary(new ImportDictionaryQuery { ImportType = importType1, Page = page, Size = size });
 
         }
+
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<FacultyDTO>>> GetFaculties()
         {
             return await _dictionaryService.GetFaculties();
         }
+
+        [Authorize(Policy = "Manager")]
         [HttpGet]
         public async Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering([FromQuery] ProgramsFilterQuery query)
         {

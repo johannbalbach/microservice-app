@@ -1,5 +1,6 @@
 ﻿using Dictionary.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using static MassTransit.MessageHeaders;
 
 namespace Dictionary.Domain.Context
 {
@@ -20,14 +21,16 @@ namespace Dictionary.Domain.Context
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<DocumentType>()
-                .HasMany(d => d.NextEducationLevels)
-                .WithMany(e => e.DocumentTypes);
-            modelBuilder.Entity<DocumentType>()
                 .HasOne(d => d.EducationLevel);
 
             modelBuilder.Entity<EducationLevel>()
                 .HasMany(d => d.DocumentTypes)
-                .WithMany(e => e.NextEducationLevels);
+                .WithMany(e => e.NextEducationLevels)
+                .UsingEntity(
+                    "DocumentTypeEducationLevel",
+                    l => l.HasOne(typeof(DocumentType)).WithMany().HasForeignKey("DocumentTypeId").HasPrincipalKey(nameof(DocumentType.Id)),
+                    r => r.HasOne(typeof(EducationLevel)).WithMany().HasForeignKey("NextEducationLevelId").HasPrincipalKey(nameof(EducationLevel.Id)),
+                    j => j.HasKey("DocumentTypeId", "NextEducationLevelId"));
         }
     }
 }

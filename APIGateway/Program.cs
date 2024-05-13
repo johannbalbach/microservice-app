@@ -1,16 +1,28 @@
 using APIGateway.Models;
+using Microsoft.AspNetCore.Identity;
+using Common.Extensions;
+using Ocelot.DependencyInjection;
+using Common.Middleware;
+using Microsoft.EntityFrameworkCore;
+using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddCommonServices();
+builder.Services.AddAuth();
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-Router router = new Router("routes.json");
+
+builder.Services.AddOcelot(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -24,14 +36,16 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
+
+app.UseMiddleware<TokenCatchMiddleware>();
+
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.UseExceptionHandler();
 
-app.Run(async (context) =>
-{
-    var content = await router.RouteRequest(context.Request);
-    await context.Response.WriteAsync(await content.Content.ReadAsStringAsync());
-});
+await app.UseOcelot();
+
+app.MapControllers();
+
+app.Run();

@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Models.Enums;
 using DocumentType = Dictionary.Domain.Entities.DocumentType;
+using System.Reflection.Emit;
 
 namespace Dictionary.BL.Services
 {
@@ -52,6 +53,7 @@ namespace Dictionary.BL.Services
                 case ImportTypeEnum.EducationLevel:
                     await ProcessImportResponseAsync<EducationLevel>(response, _educationLevelRepository, async level =>
                     {
+                        level.Id++;
                         var existingLevel = await _educationLevelRepository.GetByIdIntAsync(level.Id);
                         if (existingLevel != null)
                         {
@@ -67,6 +69,7 @@ namespace Dictionary.BL.Services
                 case ImportTypeEnum.DocumentTypes:
                     await ProcessImportResponseAsync<DocumentType>(response, _documentTypeRepository, async doc =>
                     {
+                        doc.EducationLevel.Id++;
                         doc.EducationLevel = await _educationLevelRepository.GetByIdIntAsync(doc.EducationLevel.Id);
                         doc.CreateTime = doc.CreateTime.ToUniversalTime();
                         List<EducationLevel> levels = new List<EducationLevel>();
@@ -75,17 +78,21 @@ namespace Dictionary.BL.Services
                         {
                             foreach (var level in doc.NextEducationLevels)
                             {
-                                levels.Add(await _educationLevelRepository.GetByIdIntAsync(level.Id));
+                                level.Id++;
+                                var educationLevel = await _educationLevelRepository.GetByIdIntAsync(level.Id);
+                                levels.Add(educationLevel);
+                                
+                                educationLevel.DocumentTypes.Add(doc);
                             }
                         }
-                        doc.NextEducationLevels = levels; // Устанавливаем навигационное свойство
+                        doc.NextEducationLevels = levels;
 
                         var existingDoc = await _documentTypeRepository.GetByIdAsync(doc.Id);
                         if (existingDoc != null)
                         {
                             existingDoc.Name = doc.Name;
                             existingDoc.EducationLevel = doc.EducationLevel;
-                            existingDoc.NextEducationLevels = doc.NextEducationLevels; // Используем навигационное свойство
+                            existingDoc.NextEducationLevels = doc.NextEducationLevels;
                             existingDoc.CreateTime = doc.CreateTime;
                             await _documentTypeRepository.UpdateAsync(existingDoc);
                         }
@@ -120,6 +127,7 @@ namespace Dictionary.BL.Services
 
                     foreach (var program in universityPrograms)
                     {
+                        program.EducationLevel.Id++;
                         var existingProgram = await _programRepository.GetByIdAsync(program.Id);
                         program.CreateTime = program.CreateTime.ToUniversalTime();
 

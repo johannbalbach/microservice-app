@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -46,8 +45,7 @@ namespace Dictionary.Domain.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    EducationLevelId = table.Column<int>(type: "integer", nullable: false),
-                    NextEducationLevelsId = table.Column<List<int>>(type: "integer[]", nullable: true)
+                    EducationLevelId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
