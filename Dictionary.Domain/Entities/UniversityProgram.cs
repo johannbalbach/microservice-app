@@ -8,7 +8,7 @@ namespace Dictionary.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public DateTime CreatedTime { get; set; }
+        public DateTime CreateTime { get; set; }
         [Required]
         public Guid FacultyId { get; set; }
         public int EducationLevelId { get; set; }

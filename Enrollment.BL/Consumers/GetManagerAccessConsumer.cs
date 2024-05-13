@@ -14,8 +14,8 @@ namespace Enrollment.BL.Consumers
         }
         public async Task Consume(ConsumeContext<GetManagerAccessBoolRequest> context)
         {
-            // Получение информации о пользователе в зависимости от Email или UserId
-            bool ManagerAccess = await _enrollmentService.CheckManagerAssign(context.Message.ApplicantId, context.Message.ManagerId);
+            ManagerAccess ManagerAccess = new ManagerAccess();
+            ManagerAccess.Access = await _enrollmentService.CheckManagerAssign(context.Message.ApplicantId, context.Message.ManagerId);
 
             await context.RespondAsync(ManagerAccess);
         }

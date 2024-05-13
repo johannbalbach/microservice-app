@@ -6,11 +6,11 @@ namespace Dictionary.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public DateTime CreatedTime { get; set; }
+        public DateTime CreateTime { get; set; }
         public string Name { get; set; }
         public int EducationLevelId { get; set; }
         public EducationLevel EducationLevel { get; set; } = null!;
-        public int NextEducationLevelId { get; set; }
-        public EducationLevel NextEducationLevel { get; set;} = null!;
+        public List<int> NextEducationLevelsId { get; set; } = new List<int>();
+        public List<EducationLevel>? NextEducationLevels { get; set;} = null!;
     }
 }

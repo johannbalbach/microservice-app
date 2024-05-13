@@ -21,7 +21,7 @@ namespace Document.Application.Controllers
 
         [HttpPost]
         [Route("/documents/addEducationDocument")]
-        public async Task<ActionResult<Response>> AddApplicantEducationDocument([FromBody] DocumentCreateDTO body, [FromForm] List<IFormFile> files)
+        public async Task<ActionResult<Response>> AddApplicantEducationDocument(List<IFormFile> files, [FromQuery] DocumentCreateDTO body)
         {
             var userEmailClaim = "applicant@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
@@ -32,7 +32,7 @@ namespace Document.Application.Controllers
 
         [HttpPost]
         [Route("/documents/addPassport")]
-        public async Task<ActionResult<Response>> AddApplicantPassport([FromBody] PassportCreateDTO body, [FromForm] List<IFormFile> files)
+        public async Task<ActionResult<Response>> AddApplicantPassport(List<IFormFile> files, [FromQuery] PassportCreateDTO body)
         {
             var userEmailClaim = "applicant@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
@@ -62,7 +62,7 @@ namespace Document.Application.Controllers
         }
         [HttpPost]
         [Route("/documents/upload/{documentId}")]
-        public async Task<ActionResult<Response>> UploadDocumentScan([FromForm] IFormFile file, [FromRoute][Required] Guid documentId)
+        public async Task<ActionResult<Response>> UploadDocumentScan(IFormFile file, [FromRoute][Required] Guid documentId)
         {
             var userEmailClaim = "applicant@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
@@ -111,23 +111,23 @@ namespace Document.Application.Controllers
         }
 
         [HttpGet]
-        [Route("/documents/getEducationDocument")]
-        public async Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument()
+        [Route("/documents/getEducationDocument/{DocumentTypeId}")]
+        public async Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument([FromRoute][Required] Guid DoccumentTypeId)
         {
             var userEmailClaim = "applicant@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
-            return await _documentsService.GetEducationDocument(userEmailClaim);
+            return await _documentsService.GetEducationDocument(userEmailClaim, DoccumentTypeId);
         }
 
         [HttpGet]
-        [Route("/documents/{ApplicantId}/getEducationDocument")]
-        public async Task<ActionResult<EducationDocumentViewDTO>> GetApplicantEducationDocument([FromRoute][Required] Guid applicantId)
+        [Route("/documents/{ApplicantId}/getEducationDocument/{DocumentTypeId}")]
+        public async Task<ActionResult<EducationDocumentViewDTO>> GetApplicantEducationDocument([FromRoute][Required] Guid applicantId, [FromRoute][Required] Guid DoccumentTypeId)
         {
             var userEmailClaim = "applicant@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
-            return await _documentsService.GetApplicantEducationDocument(applicantId, userEmailClaim);
+            return await _documentsService.GetApplicantEducationDocument(applicantId, userEmailClaim, DoccumentTypeId);
         }
 
         [HttpGet]

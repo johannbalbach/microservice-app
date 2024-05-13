@@ -18,6 +18,16 @@ namespace Dictionary.Domain.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<DocumentType>()
+                .HasMany(d => d.NextEducationLevels)
+                .WithMany(e => e.DocumentTypes);
+            modelBuilder.Entity<DocumentType>()
+                .HasOne(d => d.EducationLevel);
+
+            modelBuilder.Entity<EducationLevel>()
+                .HasMany(d => d.DocumentTypes)
+                .WithMany(e => e.NextEducationLevels);
         }
     }
 }

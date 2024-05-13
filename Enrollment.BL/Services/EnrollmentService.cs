@@ -6,7 +6,6 @@ using Enrollment.Domain.Models.Query;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Shared.DTO;
 using Shared.DTO.ServiceBusDTO;
 using Shared.Enums;
 using Shared.Exceptions;

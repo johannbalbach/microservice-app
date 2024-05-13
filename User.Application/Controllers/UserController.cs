@@ -85,12 +85,5 @@ namespace User.Application.Controllers
         {
             return await _userService.UserRegister(body);
         }
-
-        [Authorize]
-        [HttpPost]
-        public async Task<ActionResult<Response>> CHECK()
-        {
-            return new Response("OKOK");
-        }
     }
 }

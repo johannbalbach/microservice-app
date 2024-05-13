@@ -1,4 +1,4 @@
-﻿using Shared.DTO;
+﻿using Shared.DTO.ServiceBusDTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;

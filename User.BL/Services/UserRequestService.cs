@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using Shared.DTO;
+using Shared.DTO.ServiceBusDTO;
 using Shared.Exceptions;
 using Shared.Interfaces;
 using System;

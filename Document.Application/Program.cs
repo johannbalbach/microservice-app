@@ -20,6 +20,7 @@ builder.Services.AddMassTransit(x =>
     });
 });
 builder.Services.AddCommonServices();
+builder.Services.AddAuth();
 
 builder.Services.AddDbContext<DocumentContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

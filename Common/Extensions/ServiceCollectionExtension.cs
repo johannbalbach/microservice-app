@@ -29,7 +29,6 @@ namespace Common.Extensions
 
             services.AddExceptionHandler<GlobalExceptionHandler>();
             services.AddProblemDetails();
-            //services.AddScoped<IRabbitMqService, RabbitMqService>();
         }
 
         public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)

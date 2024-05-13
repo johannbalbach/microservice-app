@@ -1,6 +1,6 @@
 ﻿using Shared.Models.Enums;
 
-namespace Shared.DTO
+namespace Shared.DTO.ServiceBusDTO
 {
     public class UserRights
     {

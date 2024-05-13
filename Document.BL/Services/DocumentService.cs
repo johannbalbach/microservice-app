@@ -4,6 +4,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Shared.Consts;
 using Shared.DTO;
 using Shared.DTO.ServiceBusDTO;
 using Shared.Exceptions;
@@ -11,6 +12,7 @@ using Shared.Interfaces;
 using Shared.Models;
 using Shared.Models.Enums;
 using System;
+using System.Net.Mime;
 using Response = Shared.Models.Response;
 
 namespace Document.BL.Services
@@ -30,6 +32,8 @@ namespace Document.BL.Services
         public async Task<ActionResult<Response>> AddApplicantEducationDocument(DocumentCreateDTO body, List<IFormFile> files, string email)
         {
             IsFilesImages(files);
+            if (await HaveUserEducationDocument(email, body.DocumentTypeId))
+                throw new BadRequestException("you already have education document with this type");
 
             var educationDocument = new EducationDocument(body.Name, body.DocumentTypeId);
             educationDocument.ApplicantId = await IsUserApplicant(email);
@@ -50,6 +54,8 @@ namespace Document.BL.Services
         public async Task<ActionResult<Response>> AddApplicantPassport(PassportCreateDTO body, List<IFormFile> files, string email)
         {
             IsFilesImages(files);
+            if (await HaveUserPassport(email))
+                throw new BadRequestException("you already have passport");
 
             var passport = new Passport(body.SeriesNumber, body.IssuedBy, body.PlaceOfBirth, body.IssuedDate, body.BirthDate);
             passport.ApplicantId = await IsUserApplicant(email);
@@ -147,18 +153,18 @@ namespace Document.BL.Services
             return await _editEducationDocument(body, applicantId);
         }
 
-        public async Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument(string email)
+        public async Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument(string email, Guid DocumentTypeId)
         {
             var userId = await IsUserApplicant(email);
 
-            return await _getEducationDocument(userId);
+            return await _getEducationDocument(userId, DocumentTypeId);
         }
 
-        public async Task<ActionResult<EducationDocumentViewDTO>> GetApplicantEducationDocument(Guid applicantId, string email)
+        public async Task<ActionResult<EducationDocumentViewDTO>> GetApplicantEducationDocument(Guid applicantId, string email, Guid DocumentTypeId)
         {
             await CheckManagerAccess(applicantId, email);
 
-            return await _getEducationDocument(applicantId);
+            return await _getEducationDocument(applicantId, DocumentTypeId);
         }
 
         public async Task<ActionResult<PassportViewDTO>> GetPassport(string email)
@@ -177,6 +183,7 @@ namespace Document.BL.Services
 
         private async Task<PassportViewDTO> _getPassport(Guid userId)
         {
+
             var passport = await _context.Passports.FirstOrDefaultAsync(d => d.Id == userId);
             if (passport == null)
                 throw new NotFoundException("this user havent any passport");
@@ -193,9 +200,9 @@ namespace Document.BL.Services
                 FilesId = passport.FilesId
             };
         }
-        private async Task<EducationDocumentViewDTO> _getEducationDocument(Guid userId)
+        private async Task<EducationDocumentViewDTO> _getEducationDocument(Guid userId, Guid DocumentTypeId)
         {
-            var educationDocument = await _context.EducationDocuments.FirstOrDefaultAsync(d => d.Id == userId);
+            var educationDocument = await _context.EducationDocuments.FirstOrDefaultAsync(d => d.Id == userId && d.DocumentTypeGuid == DocumentTypeId);
             if (educationDocument == null)
                 throw new NotFoundException("this user havent any education document");
 
@@ -237,19 +244,35 @@ namespace Document.BL.Services
         }
         private async Task<FileDocument> SaveFile(IFormFile file)
         {
-            string fileName = Path.GetFileName(file.FileName);
-            string path = $"/Files/{Guid.NewGuid()}{Path.GetExtension(fileName)}";
-
-            using (var fileStream = new FileStream(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", path), FileMode.Create))
+            Guid fileId = Guid.NewGuid();
+            string[] parts = file.ContentType.Split('/');
+            string fileExtension = parts[1];
+            string path = $"{ConstValues.FileStoreLocation}/{ConstValues.FileStoreName}/{fileId}.{fileExtension}";
+            Console.WriteLine(Directory.GetCurrentDirectory());
+            Console.WriteLine(Directory.GetCurrentDirectory() + path);
+            Console.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), path));
+            using (var fileStream = new FileStream(Path.Combine(Directory.GetCurrentDirectory(), path), FileMode.Create))
             {
                 await file.CopyToAsync(fileStream);
             }
 
-            var fileModel = new FileDocument { Path = path };
+            var fileModel = new FileDocument { Id = fileId, Path = path };
             _context.fileDocuments.Add(fileModel);
             await _context.SaveChangesAsync();
 
             return fileModel;
+        }
+        private async Task<bool> HaveUserEducationDocument(string email, Guid documentTypeId)
+        {
+            var user = await GetUser(email);
+            var existDocument = await _context.EducationDocuments.FirstOrDefaultAsync(ed => ed.DocumentTypeGuid == documentTypeId && ed.ApplicantId == user.Id);
+            return !(existDocument == null);
+        }
+        private async Task<bool> HaveUserPassport(string email)
+        {
+            var user = await GetUser(email);
+            var existDocument = await _context.Passports.FirstOrDefaultAsync(ed => ed.ApplicantId == user.Id);
+            return !(existDocument == null);
         }
 
         private void IsFilesImages(List<IFormFile> files)
@@ -323,9 +346,9 @@ namespace Document.BL.Services
         }
         private async Task<bool> CheckAssign(Guid ApplicantId, Guid ManagerId)
         {
-            //var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTO { Email = email });
+            var response = await _getEnrollmentRequestClient.GetResponse<ManagerAccess>(new GetManagerAccessBoolRequest { ApplicantId = ApplicantId, ManagerId = ManagerId });
 
-            return true;
+            return response.Message.Access;
         }
         private async Task<UserRights> GetUser(string email)
         {
@@ -336,6 +359,7 @@ namespace Document.BL.Services
         private async Task<UserRights> GetUser(Guid id)
         {
             var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTORequest { UserId = id });
+
             return response.Message;
         }
     }

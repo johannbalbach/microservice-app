@@ -112,12 +112,5 @@ namespace Enrollment.Application.Controllers
 
             return await _enrollmentService.RemoveAdmissionFromApplicantList(id, userEmailClaim);
         }
-
-        //[Authorize]
-        [HttpPost]
-        public async Task<ActionResult<Response>> CHECK()
-        {
-            return new Response("OKOK");
-        }
     }
 }

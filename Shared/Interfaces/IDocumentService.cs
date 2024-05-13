@@ -16,8 +16,8 @@ namespace Shared.Interfaces
         Task<ActionResult<Response>> EditApplicantPassport(PassportEditDTO body, Guid ApplicantId, string email);
         Task<ActionResult<Response>> EditEducationDocument(EducationDocumentEditDTO body, string email);
         Task<ActionResult<Response>> EditApplicantEducationDocument(EducationDocumentEditDTO body, Guid ApplicantId, string email);
-        Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument(string email);
-        Task<ActionResult<EducationDocumentViewDTO>> GetApplicantEducationDocument(Guid applicantId, string email);
+        Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument(string email, Guid DocumentTypeId);
+        Task<ActionResult<EducationDocumentViewDTO>> GetApplicantEducationDocument(Guid applicantId, string email, Guid DocumentTypeId);
         Task<ActionResult<PassportViewDTO>> GetPassport(string email);
         Task<ActionResult<PassportViewDTO>> GetApplicantPassport(Guid applicantId, string email);
     }

@@ -50,9 +50,7 @@ namespace Dictionary.BL.Services
             switch (query.ImportType)
             {
                 case ImportTypeEnum.EducationLevel:
-                    var educationLevels = JsonConvert.DeserializeObject<List<EducationLevel>>(response);
-
-                    foreach (var level in educationLevels)
+                    await ProcessImportResponseAsync<EducationLevel>(response, _educationLevelRepository, async level =>
                     {
                         var existingLevel = await _educationLevelRepository.GetByIdIntAsync(level.Id);
                         if (existingLevel != null)
@@ -64,46 +62,41 @@ namespace Dictionary.BL.Services
                         {
                             await _educationLevelRepository.AddAsync(level);
                         }
-                    }
-
-                    await _educationLevelRepository.SaveChangesAsync();
+                    });
                     return new Response<string>("Successful import Education level", response);
                 case ImportTypeEnum.DocumentTypes:
-                    var documentTypes = JsonConvert.DeserializeObject<List<DocumentType>>(response);
-
-                    foreach (var doc in documentTypes)
+                    await ProcessImportResponseAsync<DocumentType>(response, _documentTypeRepository, async doc =>
                     {
                         doc.EducationLevel = await _educationLevelRepository.GetByIdIntAsync(doc.EducationLevel.Id);
-                        doc.CreatedTime = doc.CreatedTime.ToUniversalTime();
+                        doc.CreateTime = doc.CreateTime.ToUniversalTime();
+                        List<EducationLevel> levels = new List<EducationLevel>();
 
-                        if (doc.NextEducationLevelId != null)
+                        if (doc.NextEducationLevels != null)
                         {
-                            doc.NextEducationLevel = await _educationLevelRepository.GetByIdIntAsync(doc.NextEducationLevelId);
+                            foreach (var level in doc.NextEducationLevels)
+                            {
+                                levels.Add(await _educationLevelRepository.GetByIdIntAsync(level.Id));
+                            }
                         }
+                        doc.NextEducationLevels = levels; // Устанавливаем навигационное свойство
 
                         var existingDoc = await _documentTypeRepository.GetByIdAsync(doc.Id);
                         if (existingDoc != null)
                         {
                             existingDoc.Name = doc.Name;
                             existingDoc.EducationLevel = doc.EducationLevel;
-                            existingDoc.NextEducationLevel = doc.NextEducationLevel;
-                            existingDoc.EducationLevelId = doc.EducationLevel.Id;
-                            existingDoc.NextEducationLevelId = doc.NextEducationLevel.Id;
-                            existingDoc.CreatedTime = doc.CreatedTime;
+                            existingDoc.NextEducationLevels = doc.NextEducationLevels; // Используем навигационное свойство
+                            existingDoc.CreateTime = doc.CreateTime;
                             await _documentTypeRepository.UpdateAsync(existingDoc);
                         }
                         else
                         {
                             await _documentTypeRepository.AddAsync(doc);
                         }
-                    }
-
-                    await _documentTypeRepository.SaveChangesAsync();
+                    });
                     return new Response<string>("Successful import document types", response);
                 case ImportTypeEnum.Faculties:
-                    var faculties = JsonConvert.DeserializeObject<List<Faculty>>(response);
-
-                    foreach (var faculty in faculties)
+                    await ProcessImportResponseAsync<Faculty>(response, _facultyRepository, async faculty =>
                     {
                         var existingFaculty = await _facultyRepository.GetByIdAsync(faculty.Id);
                         faculty.createTime = faculty.createTime.ToUniversalTime();
@@ -117,9 +110,7 @@ namespace Dictionary.BL.Services
                         {
                             await _facultyRepository.AddAsync(faculty);
                         }
-                    }
-
-                    await _facultyRepository.SaveChangesAsync();
+                    });
                     return new Response<string>("Successful import faculties", response);
                 case ImportTypeEnum.Programs:
                     var jsonObject = JObject.Parse(response);
@@ -130,7 +121,7 @@ namespace Dictionary.BL.Services
                     foreach (var program in universityPrograms)
                     {
                         var existingProgram = await _programRepository.GetByIdAsync(program.Id);
-                        program.CreatedTime = program.CreatedTime.ToUniversalTime();
+                        program.CreateTime = program.CreateTime.ToUniversalTime();
 
                         var faculty = await _facultyRepository.GetByIdAsync(program.Faculty.Id);
                         var educationLevel = await _educationLevelRepository.GetByIdIntAsync(program.EducationLevel.Id);
@@ -140,7 +131,7 @@ namespace Dictionary.BL.Services
                             existingProgram.Name = program.Name;
                             existingProgram.Code = program.Code == null ? "" : program.Code;
                             existingProgram.Language = program.Language;
-                            existingProgram.CreatedTime = program.CreatedTime;
+                            existingProgram.CreateTime = program.CreateTime;
                             existingProgram.EducationForm = EducationFormConverter.ConvertToEducationFormEnum(program.EducationForm);
                             existingProgram.FacultyId = program.Faculty.Id;
                             existingProgram.Faculty = faculty;
@@ -155,7 +146,7 @@ namespace Dictionary.BL.Services
                             {
                                 Name = program.Name,
                                 Code = program.Code == null ? "" : program.Code,
-                                CreatedTime = program.CreatedTime,
+                                CreateTime = program.CreateTime,
                                 Language = program.Language,
                                 EducationForm = EducationFormConverter.ConvertToEducationFormEnum(program.EducationForm),
                                 FacultyId = program.Faculty.Id,
@@ -169,11 +160,9 @@ namespace Dictionary.BL.Services
 
                     await _programRepository.SaveChangesAsync();
                     return new Response<string>("Successful import university programs", response);
-
                 default:
                     throw new BadRequestException("Invalid import type");
             }
-
 
         }
         public async Task<ActionResult<List<FacultyDTO>>> GetFaculties()
@@ -204,6 +193,16 @@ namespace Dictionary.BL.Services
             var programsPagination = new ProgramWithPaginationInfo { Programs = programsDTO, size = query.Size, pageCurrent = query.Page, elementsCount = await _programRepository.ElementsCount()};
 
             return programsPagination;
+        }
+
+        private async Task ProcessImportResponseAsync<T>(string response, IRepository<T> repository, Func<T, Task> processAction) where T : class
+        {
+            var items = JsonConvert.DeserializeObject<List<T>>(response);
+            foreach (var item in items)
+            {
+                await processAction(item);
+            }
+            await repository.SaveChangesAsync();
         }
     }
 }
