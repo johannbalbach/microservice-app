@@ -8,7 +8,7 @@ namespace Shared.DTO
 {
     public class ApplicantWithPaginationInfo
     {
-        public List<ApplicantProfileDTO> applicants = new List<ApplicantProfileDTO>();
+        public List<ApplicantWithIdDTO> applicants { get; set; }
         public int? size { get; set; }
         public int? elementsCount { get; set; }
         public int? pageCurrent { get; set; }

@@ -91,6 +91,21 @@ namespace Common.Extensions
                         return before <= utcNow && utcNow < expires;
                     }
                 };
+                jwtOptions.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        // Логирование ошибки аутентификации
+                        Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        // Логирование успешной валидации токена
+                        Console.WriteLine("Token validated successfully.");
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             // Добавление разрешений для ролей
@@ -106,6 +121,15 @@ namespace Common.Extensions
                     {
                         return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.Applicant.ToString())
                         || (claim.Type == "UserRole" && claim.Value == RoleEnum.Manager.ToString())
+                        );
+                    });
+                });
+                options.AddPolicy("MainManagerOrAdmin", p =>
+                {
+                    p.RequireAssertion(context =>
+                    {
+                        return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.MainManager.ToString()
+                        || (claim.Type == "UserRole" && claim.Value == RoleEnum.Admin.ToString()))
                         );
                     });
                 });

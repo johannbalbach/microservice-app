@@ -23,7 +23,7 @@ namespace Enrollment.Application.Controllers
         }
 
         [HttpPut]
-        //[Authorize]
+        [Authorize(Policy = "MainManager")]
         [Route("/enrollment/assignManager/{admissionId}")]
         public async Task<ActionResult<Response>> AssignManagerToAdmission([FromRoute][Required] Guid admissionId, Guid managerId)
         {
@@ -31,7 +31,7 @@ namespace Enrollment.Application.Controllers
         }
 
         [HttpPut]
-        //[Authorize]
+        [Authorize(Policy = "Manager")]
         [Route("/enrollment/assignManagerToApplicant/{applicantId}")]
         public async Task<ActionResult<Response>> AssignManagerToApplicant([FromRoute][Required] Guid applicantId, Guid managerId)
         {
@@ -39,11 +39,11 @@ namespace Enrollment.Application.Controllers
         }
 
         [HttpPut]
-        //[Authorize]
+        [Authorize(Policy = "Manager")]
         [Route("/enrollment/editAdmissionStatus/{id}")]
         public async Task<ActionResult<Response>> EditAdmissionStatus([FromBody] StatusEnum body, [FromRoute][Required] Guid id)
         {
-            var userEmailClaim = "manager@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
 
@@ -51,7 +51,7 @@ namespace Enrollment.Application.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("/enrollment/getAdmissions/{id}")]
         public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions([FromRoute][Required] Guid id)
         {
@@ -59,42 +59,42 @@ namespace Enrollment.Application.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("/enrollment/getListOfAdmissions")]
         public async Task<ActionResult<AdmissionWithPaginationInfo>> GetListOfAdmissionsWithPaginationFilteringAndSorting([FromQuery] AdmissionsFilterQuery query)
         {
             return await _enrollmentService.GetListOfAdmissionsWithPaginationFilteringAndSorting(query);
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<AdmissionDTO>>> GetMyPrograms()
         {
-            var userEmailClaim = "manager@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
 
             return await _enrollmentService.GetMyAdmissions(userEmailClaim);
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPost]
         [Route("api/applicant/addProgramToMyList/{id}")]
         public async Task<ActionResult<Response>> AddProgramToApplicantList([FromRoute][Required] Guid id)
         {
-            var userEmailClaim = "manager@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
 
             return await _enrollmentService.AddProgramToMyList(id, userEmailClaim);
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPut]
         [Route("api/applicant/changeProgramPriority/{id}")]
         public async Task<ActionResult<Response>> ChangeProgramPriority([FromBody] int priority, [FromRoute][Required] Guid id)
         {
-            var userEmailClaim = "manager@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
 
@@ -102,11 +102,11 @@ namespace Enrollment.Application.Controllers
         }
 
         [HttpDelete]
-        //[Authorize]
+        [Authorize]
         [Route("api/applicant/removeProgramFromMyList/{id}")]
         public async Task<ActionResult<Response>> RemoveProgramFromApplicantList([FromRoute][Required] Guid id)
         {
-            var userEmailClaim = "manager@example.com";//HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
 

@@ -1,9 +1,6 @@
-using APIGateway.Models;
-using Microsoft.AspNetCore.Identity;
 using Common.Extensions;
 using Ocelot.DependencyInjection;
 using Common.Middleware;
-using Microsoft.EntityFrameworkCore;
 using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +16,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-
 
 builder.Services.AddOcelot(builder.Configuration);
 

@@ -45,6 +45,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             InvalidTokenException invalidTokenException => (StatusCodes.Status401Unauthorized, invalidTokenException.Message),
             BadRequestException badRequestException => (StatusCodes.Status400BadRequest, badRequestException.Message),
             NotFoundException notFoundException => (StatusCodes.Status404NotFound, notFoundException.Message),
+            ForbiddenException forbiddenException => (StatusCodes.Status403Forbidden, forbiddenException.Message),
             _ => (StatusCodes.Status500InternalServerError, "Some stupid error occured")
         };
     }

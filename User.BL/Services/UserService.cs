@@ -13,6 +13,10 @@ using Shared.Exceptions;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Security.Cryptography;
+using Shared.DTO.Query;
+using MassTransit;
+using Shared.DTO.ServiceBusDTO;
+using Response = Shared.Models.Response;
 
 namespace User.BL.Services
 {
@@ -21,29 +25,13 @@ namespace User.BL.Services
         private readonly AuthDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        public UserService(AuthDbContext context, IMapper mapper, ITokenService tokenService)
+        private readonly IRequestClient<GetManagerAccessBoolRequest> _getEnrollmentRequestClient;
+        public UserService(AuthDbContext context, IMapper mapper, ITokenService tokenService, IBus bus)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
-        }
-        private async Task<bool> _IsUserInDb(UserE user)
-        {
-            if (user == null)
-                return false;
-
-            var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == user.Email);
-
-            return !(temp == null);
-        }
-        private async Task _IsTokenValid(string token)
-        {
-            var alreadyExistsToken = await _context.UserTokens.FirstOrDefaultAsync(x => x.AccessToken == token);
-
-            if (alreadyExistsToken == null)
-            {
-                throw new InvalidTokenException();
-            }
+            _getEnrollmentRequestClient = bus.CreateRequestClient<GetManagerAccessBoolRequest>();
         }
         public async Task<ActionResult<Response>> ChangePassword(string password, string email)
         {
@@ -85,39 +73,35 @@ namespace User.BL.Services
             if (login.Password != user.Password)
                 throw new BadRequestException("Вы ввели неправильный пароль");
 
-            var temp = await _context.UserTokens.SingleOrDefaultAsync(h => h.UserId == user.Id);
+            var existingToken = await _context.UserTokens.SingleOrDefaultAsync(h => h.UserId == user.Id);
 
-            if (temp != null)
+            if (existingToken != null)
             {
-                _context.UserTokens.Remove(temp);
+                _context.UserTokens.Remove(existingToken);
                 await _context.SaveChangesAsync();  
             }
 
+            var role = user.Roles.Contains(RoleEnum.Manager) ? RoleEnum.Manager : RoleEnum.Applicant;
 
-            RoleEnum role = RoleEnum.Applicant;
-            if (user.Roles.Contains(RoleEnum.Manager))
-                role = RoleEnum.Manager;
-
-            var AccessToken = await _tokenService.GenerateAccessToken(login.Email, role);
-            var RefreshToken = await _tokenService.GenerateRefreshToken();
+            var accessToken = await _tokenService.GenerateAccessToken(login.Email, role);
+            var refreshToken = await _tokenService.GenerateRefreshToken();
 
             await _context.UserTokens.AddAsync(new Token { 
                 UserId = user.Id,
                 LoginProvider = "site",
                 Name = user.FullName,
-                AccessToken = AccessToken,
-                RefreshToken = RefreshToken,
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
                 RefreshTokenExpiration = DateTime.UtcNow.AddMinutes(JWTConfiguration.RefreshLifeTime)
             });
             await _context.SaveChangesAsync();
 
-            return new Response("AccessToken: " + AccessToken + "\nRefreshToken: " + RefreshToken);
+            return new Response($"AccessToken: {accessToken}\nRefreshToken: {refreshToken}");
         }
 
         public async Task<ActionResult<UserProfileDTO>> UserProfileGet(string email)
         {
             var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == email);
-            //applicant manager?
 
             if (temp == null)
                 throw new InvalidLoginException();
@@ -127,34 +111,33 @@ namespace User.BL.Services
 
         public async Task<ActionResult<UserProfileDTO>> UserProfilePut(UserProfileEditDTO user, string email)
         {
-            var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == email);
+            var existingUser = await _context.Users.SingleOrDefaultAsync(h => h.Email == email);
 
-            if (temp == null)
+            if (existingUser == null)
                 throw new InvalidLoginException();
 
-            temp.FullName = user.FullName;
-            temp.Email = user.Email;
-            temp.NormalizedEmail = user.Email.Normalize();
+            existingUser.FullName = user.FullName;
+            existingUser.Email = user.Email;
+            existingUser.NormalizedEmail = user.Email.Normalize();
 
             await _context.SaveChangesAsync();
 
-            return _mapper.Map<UserProfileDTO>(temp);
+            return _mapper.Map<UserProfileDTO>(existingUser);
         }
 
         public async Task<ActionResult<Response>> UserRegisterApplicantPost(ApplicantRegisterDTO body)
         {
-            var applicant = _mapper.Map<Applicant>(body);
-
             var user = _mapper.Map<UserE>(body);
             user.Id = new Guid();
             user.NormalizedEmail = body.Email.Normalize();
             user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
             user.Roles.Add(RoleEnum.Applicant);
 
+            var applicant = _mapper.Map<Applicant>(body);
             applicant.User = user;
             applicant.Id = user.Id;
 
-            if (_IsUserInDb(user).Result)
+            if (await _IsUserInDb(user))
             {
                 throw new BadRequestException("user with that email is already in database");
             }
@@ -175,11 +158,12 @@ namespace User.BL.Services
         public async Task<ActionResult<Response>> UserRegister(UserRegisterDTO body)
         {
             var user = _mapper.Map<UserE>(body);
+            user.Id = Guid.NewGuid();
+            user.FullName = body.FullName;
             user.NormalizedEmail = body.Email.Normalize();
             user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
-            user.Roles.Add(RoleEnum.Manager);
 
-            if (_IsUserInDb(user).Result)
+            if (await _IsUserInDb(user))
             {
                 throw new BadRequestException("user with that email is already in database");
             }
@@ -194,6 +178,233 @@ namespace User.BL.Services
             });
 
             return result;
+        }
+        public async Task<ActionResult<Response>> UpdateToken(string refresh_token)
+        {
+            var token = await _context.UserTokens.SingleOrDefaultAsync(h => h.RefreshToken == refresh_token);
+
+            if (token == null)
+                throw new InvalidLoginException("this refresh_token doesnt exist or already expired, please login first");
+            if (token.RefreshTokenExpiration <= DateTime.Now)
+            {
+                _context.UserTokens.Remove(token);
+                await _context.SaveChangesAsync();
+
+                throw new InvalidLoginException("this refresh_token already expired, please login again");
+            }
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == token.UserId);
+            if (user == null)
+                throw new NotFoundException("user who have this token not found");
+
+            var accessToken = await _tokenService.GenerateAccessToken(user.Email, user.Roles.First());
+
+            token.AccessToken = accessToken;
+            _context.SaveChanges();
+
+            return new Response("AccessToken: " + accessToken + "\nRefreshToken: " + token.RefreshToken);
+        }
+        public async Task<ActionResult<Response>> AddMainManager(Guid userId)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                throw new NotFoundException("User with that guid not found");
+
+            if (!user.Roles.Contains(RoleEnum.MainManager))
+            {
+                user.Roles.Add(RoleEnum.MainManager);
+                await _context.SaveChangesAsync();
+            }
+
+            return new Response { Status = "200", Message = "Main manager added successfully" };
+        }
+
+        public async Task<ActionResult<Response>> AddManager(UserRegisterDTO body)
+        {
+            var user = _mapper.Map<UserE>(body);
+            user.Id = Guid.NewGuid();
+            user.NormalizedEmail = body.Email.Normalize();
+            user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
+            user.Roles.Add(RoleEnum.Manager);
+
+            if (await _IsUserInDb(user))
+            {
+                throw new BadRequestException("User with that email is already in database");
+            }
+
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
+            return new Response { Status = "200", Message = "Manager added successfully" };
+        }
+
+        public async Task<ActionResult<ApplicantProfileDTO>> EditApplicantByIdManager(ApplicantProfileEditDTO body, Guid id, string email)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+            if (user == null)
+                throw new NotFoundException("user with this token is not found");
+
+            if (user.Roles.Contains(RoleEnum.Manager) && !( user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin)))
+            {
+                if (!await CheckAssign(id, user.Id))
+                    throw new ForbiddenException("You dont have enough rights to edit this applicant");
+            }
+
+            var applicant = await _context.Applicants.SingleOrDefaultAsync(a => a.Id == id);
+
+            if (applicant == null)
+                throw new NotFoundException("Applicant not found");
+
+            applicant.User.FullName = body.FullName;
+            applicant.BirthDate = body.BirthDate;
+            applicant.Gender = body.Gender;
+            applicant.Citizenship = body.Citizenship;
+            applicant.PhoneNumber = body.PhoneNumber;
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<ApplicantProfileDTO>(applicant);
+        }
+
+        public async Task<ActionResult<ApplicantProfileDTO>> GetApplicantByIdManager(Guid id)
+        {
+            var applicant = await _context.Applicants.SingleOrDefaultAsync(a => a.Id == id);
+
+            if (applicant == null)
+                throw new NotFoundException("Applicant not found");
+
+            var applicantDto = _mapper.Map<ApplicantProfileDTO>(applicant);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == applicant.Id);
+
+            applicantDto.FullName = user.FullName;
+            applicantDto.Email = user.Email;
+            applicantDto.Roles = user.Roles;
+
+            return applicantDto;
+        }
+
+        public async Task<ActionResult<ApplicantWithPaginationInfo>> GetApplicantsListWithFiltering(ApplicantsFilterQuery query)
+        {
+            var applicantsQuery = _context.Applicants.AsQueryable();
+
+            if (!string.IsNullOrEmpty(query.Search))
+            {
+                applicantsQuery = applicantsQuery.Where(a => a.User.FullName.Contains(query.Search));
+            }
+
+            if (query.BirthDateFrom.HasValue)
+            {
+                applicantsQuery = applicantsQuery.Where(a => a.BirthDate >= query.BirthDateFrom.Value);
+            }
+
+            if (query.BirthDateTo.HasValue)
+            {
+                applicantsQuery = applicantsQuery.Where(a => a.BirthDate <= query.BirthDateTo.Value);
+            }
+
+            if (query.Gender != null)
+            {
+                applicantsQuery = applicantsQuery.Where(a => a.Gender == query.Gender);
+            }
+
+            if (!string.IsNullOrEmpty(query.Citizenship))
+            {
+                applicantsQuery = applicantsQuery.Where(a => a.Citizenship.Contains(query.Citizenship));
+            }
+
+            if (!string.IsNullOrEmpty(query.PhoneNumber))
+            {
+                applicantsQuery = applicantsQuery.Where(a => a.PhoneNumber.Contains(query.PhoneNumber));
+            }
+
+            var applicantsList = await applicantsQuery.Skip((query.page - 1) * query.pageSize).Take(query.pageSize).ToListAsync();
+
+            List<ApplicantWithIdDTO> applicantsDtos = new List<ApplicantWithIdDTO>();
+            foreach(var appl in applicantsList)
+            {
+                var applDto = _mapper.Map<ApplicantWithIdDTO>(appl);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == appl.Id);
+
+                applDto.FullName = user.FullName;
+                applDto.Email = user.Email;
+                applDto.Roles = user.Roles;
+                applicantsDtos.Add(applDto);
+            }
+
+            return new ApplicantWithPaginationInfo
+            {
+                applicants = applicantsDtos,
+                size = query.pageSize,
+                pageCurrent = query.page,
+                elementsCount = await applicantsQuery.CountAsync(),
+            };
+        }
+
+        public async Task<ActionResult<ManagerWithPaginationInfo>> GetListOfManagersWithFiltering(ManagersFilterQuery query, string email)
+        {
+            var managersQuery = _context.Managers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(query.Type))
+            {
+                // Implement filtering by Type if necessary
+            }
+
+            if (query.FacultyId.HasValue)
+            {
+                //managersQuery = managersQuery.Where(m => m.FacultyId == query.FacultyId);
+            }
+
+            if (query.ApplicantId.HasValue)
+            {
+                // Implement filtering by ApplicantId if necessary
+            }
+
+            if (!string.IsNullOrEmpty(query.Search))
+            {
+                managersQuery = managersQuery.Where(m => m.User.FullName.Contains(query.Search));
+            }
+
+            // Implement sorting logic if necessary
+            if (!string.IsNullOrEmpty(query.SortBy))
+            {
+                // Implement sorting logic based on query.SortBy
+            }
+
+            var managersList = await managersQuery.ToListAsync();
+
+            throw new NotImplementedException();
+
+/*            return new ManagerWithPaginationInfo
+            {
+                Managers = _mapper.Map<List<ManagerProfileDTO>>(managersList),
+                TotalCount = managersList.Count
+            };*/
+        }
+
+        private async Task<bool> CheckAssign(Guid ApplicantId, Guid ManagerId)
+        {
+            var response = await _getEnrollmentRequestClient.GetResponse<ManagerAccess>(new GetManagerAccessBoolRequest { ApplicantId = ApplicantId, ManagerId = ManagerId });
+
+            return response.Message.Access;
+        }
+        private async Task<bool> _IsUserInDb(UserE user)
+        {
+            if (user == null)
+                return false;
+
+            var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == user.Email);
+
+            return !(temp == null);
+        }
+        private async Task _IsTokenValid(string token)
+        {
+            var alreadyExistsToken = await _context.UserTokens.FirstOrDefaultAsync(x => x.AccessToken == token);
+
+            if (alreadyExistsToken == null)
+            {
+                throw new InvalidTokenException();
+            }
         }
     }
 }

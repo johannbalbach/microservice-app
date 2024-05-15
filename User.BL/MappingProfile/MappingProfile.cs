@@ -16,6 +16,7 @@ namespace User.BL.MappingProfile
             CreateMap<Applicant, ApplicantProfileDTO>();
             CreateMap<Applicant, ApplicantRegisterDTO>();
             CreateMap<Applicant, ApplicantProfileEditDTO>();
+            CreateMap<Applicant, ApplicantWithIdDTO>();
             CreateMap<UserE, ApplicantProfileDTO>();
             CreateMap<UserE, ApplicantRegisterDTO>();
             CreateMap<UserE, ApplicantProfileEditDTO>();

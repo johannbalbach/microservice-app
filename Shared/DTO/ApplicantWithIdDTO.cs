@@ -1,10 +1,10 @@
-using Shared.Models.Enums;
-using System.Text.Json.Serialization;
+﻿using Shared.Models.Enums;
 
 namespace Shared.DTO
 {
-    public class ApplicantProfileDTO
+    public class ApplicantWithIdDTO
     {
+        public Guid Id { get; set; }
         public string FullName { get; set; }
         public DateTime? BirthDate { get; set; }
         public GenderEnum? Gender { get; set; }
