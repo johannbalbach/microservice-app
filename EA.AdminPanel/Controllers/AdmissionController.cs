@@ -7,7 +7,6 @@ using Shared.Models.Enums;
 
 namespace EA.AdminPanel.Controllers
 {
-    [Authorize(Policy = "Privileged")]
     public class AdmissionsController : Controller
     {
         private readonly IAdmissionService _admissionService;

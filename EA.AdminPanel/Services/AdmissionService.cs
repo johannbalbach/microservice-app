@@ -18,7 +18,7 @@ namespace EA.AdminPanel.Services
         public async Task<AdmissionWithPaginationInfo> GetAdmissionsWithFilter(AdmissionsFilterQuery query)
         {
             var queryString = BuildQueryString(query);
-            var response = await _httpClient.GetAsync($"/enrollment/getListOfAdmissions{queryString}");
+            var response = await _httpClient.GetAsync($"/api/enrollment/getListOfAdmissions{queryString}");
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsAsync<AdmissionWithPaginationInfo>();

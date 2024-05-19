@@ -12,7 +12,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Enrollment.Application.Controllers
 {
     [ApiController]
-    [Route("api/[action]")]
+    [Route("api/")]
     public class EnrollmentController: ControllerBase
     {
         private readonly IEnrollmentService _enrollmentService;

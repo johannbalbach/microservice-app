@@ -7,6 +7,5 @@ namespace EA.AdminPanel.Services.Interfaces
     {
         Task<UserProfileDTO> GetProfileAsync();
         Task ChangePasswordAsync(string password);
-        Task<Token> Login(LoginCredentials credentials);
     }
 }

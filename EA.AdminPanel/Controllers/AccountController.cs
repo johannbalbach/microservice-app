@@ -7,14 +7,15 @@ using System.Web.Http.ModelBinding;
 
 namespace EA.AdminPanel.Controllers
 {
-    [Authorize]
     public class AccountController : Controller
     {
         private readonly IUserService _userService;
+        private readonly IAuthService _authService;
 
-        public AccountController(IUserService userService)
+        public AccountController(IUserService userService, IAuthService authService)
         {
             _userService = userService;
+            _authService = authService;
         }
         [HttpGet]
         [AllowAnonymous]
@@ -32,15 +33,16 @@ namespace EA.AdminPanel.Controllers
                 return View(credentials);
             }
 
-            var token = await _userService.Login(credentials);
+            var token = await _authService.Login(credentials);
             if (token == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return View(credentials);
             }
 
-            // Отправляем токен на клиентскую сторону для сохранения в LocalStorage
-            return Json(new { success = true, accessToken = token.AccessToken, refreshToken = token.RefreshToken });
+            Response.Cookies.Append("AccessToken", token.AccessToken, new CookieOptions { HttpOnly = true, Secure = true });
+
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]

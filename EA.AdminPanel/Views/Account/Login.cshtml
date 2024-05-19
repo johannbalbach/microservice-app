@@ -40,27 +40,6 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation/1.19.1/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.11/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#loginForm').on('submit', function (event) {
-                event.preventDefault();
-                $.ajax({
-                    url: '@Url.Action("Login", "Account")',
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function (response) {
-                        if (response.success) {
-                            localStorage.setItem('accessToken', response.accessToken);
-                            localStorage.setItem('refreshToken', response.refreshToken);
-                            window.location.href = '@Url.Action("Index", "Home")';
-                        } else {
-                            alert('Login failed');
-                        }
-                    }
-                });
-            });
-        });
-    </script>
 
 </body>
 </html>

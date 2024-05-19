@@ -1,6 +1,7 @@
 
 using Common.Extensions;
 using Common.Middleware;
+using EA.AdminPanel.Helper;
 using EA.AdminPanel.Services;
 using EA.AdminPanel.Services.Interfaces;
 
@@ -13,14 +14,21 @@ builder.Services.AddAuth();
 /*builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAdmissionService, AdmissionService>();*/
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<TokenHandler>();
+
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5286");
+});
 builder.Services.AddHttpClient<IUserService, UserService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5286");
-});
+    client.BaseAddress = new Uri("http://localhost:5012");
+}).AddHttpMessageHandler<TokenHandler>();
 builder.Services.AddHttpClient<IAdmissionService, AdmissionService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5286");
-});
+    client.BaseAddress = new Uri("http://localhost:5027");
+}).AddHttpMessageHandler<TokenHandler>();
 
 /*builder.Services.AddHttpClient<IUserService, UserService>();
 builder.Services.AddHttpClient<IAdmissionService, AdmissionService>();*/

@@ -16,8 +16,9 @@ namespace EA.AdminPanel.Services
 
         public async Task<UserProfileDTO> GetProfileAsync()
         {
-            var response = await _httpClient.GetAsync("/user/getProfile");
+            var response = await _httpClient.GetAsync("/api/user/getProfile");
             response.EnsureSuccessStatusCode();
+
             return await response.Content.ReadAsAsync<UserProfileDTO>();
         }
 
@@ -25,16 +26,6 @@ namespace EA.AdminPanel.Services
         {
             var response = await _httpClient.PostAsJsonAsync("/user/changePassword", password);
             response.EnsureSuccessStatusCode();
-        }
-        public async Task<Token> Login(LoginCredentials credentials)
-        {
-            var response = await _httpClient.PostAsJsonAsync("/user/login", credentials);
-            response.EnsureSuccessStatusCode();
-
-            var responseData = await response.Content.ReadAsAsync<Response>();
-            Console.WriteLine(responseData);
-
-            return TokenExtractor.ExtractToken(responseData.Message);
         }
     }
 }

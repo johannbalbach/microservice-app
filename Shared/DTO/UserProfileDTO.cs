@@ -9,8 +9,6 @@ namespace Shared.DTO
     {
         public string FullName { get; set; }
         public string Email { get; set; }
-
-        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public List<RoleEnum> Roles { get; set; }
     }
 }
