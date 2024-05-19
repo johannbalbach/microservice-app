@@ -24,12 +24,14 @@ namespace Enrollment.BL.Services
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly IRequestClient<GetUserDTORequest> _getUserRequestClient;
+        private readonly IRequestClient<GetProgramExistBoolRequest> _getDictionaryRequestClient;
 
         public EnrollmentService(AppDbContext context, IMapper mapper, IBus bus)
         {
             _context = context;
             _mapper = mapper;
             _getUserRequestClient = bus.CreateRequestClient<GetUserDTORequest>();
+            _getDictionaryRequestClient = bus.CreateRequestClient<GetProgramExistBoolRequest>();
         }
         public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId, Guid managerId)
         {
@@ -155,12 +157,11 @@ namespace Enrollment.BL.Services
         {
             var user = await GetUser(email);
             var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.ProgramId == id && a.ApplicantId == user.Id);
-            //запрос на проверку существование такого 
+            if (!await IsProgramExist(id))
+                throw new NotFoundException("Program with that id doesnt exist");
             
             if (existAdmission != null)
-            {
                 throw new BadRequestException("this admission is already exist");
-            }
 
             var admission = new Admission{
                 Id = Guid.NewGuid(),
@@ -180,6 +181,7 @@ namespace Enrollment.BL.Services
         {
             var user = await GetUser(email);
             var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.Id == id);
+
             if (priority <= 0)
                 throw new BadRequestException("priority should be > 0");
             if (await _context.Admissions.Where(a => a.ApplicantId == user.Id).CountAsync() == null)
@@ -233,6 +235,12 @@ namespace Enrollment.BL.Services
             await _context.SaveChangesAsync();
 
             return new Response("Admission successfully removed");
+        }
+        private async Task<bool> IsProgramExist(Guid id)
+        {
+            var response = await _getDictionaryRequestClient.GetResponse<ProgramExistBool>(new GetProgramExistBoolRequest { ProgramId = id });
+
+            return response.Message.Exist;
         }
         private async Task<UserRights> GetUser(string email)
         {

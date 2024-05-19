@@ -149,13 +149,13 @@ namespace User.Application.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<>> GetListOfManagersWithFiltering([FromQuery] ManagersFilterQuery query)
+        [Authorize]
+        [Route("/api/user/check-token")]
+        public async Task<ActionResult<Response>> CheckToken()
         {
-            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
-            if (userEmailClaim == null)
-                throw new InvalidTokenException("Token not found");
+            var token = HttpContext.Request.Headers["Authorization"];
 
-            return await _userService.GetListOfManagersWithFiltering(query, userEmailClaim);
+            return await _userService.CheckToken(token.ToString().Substring(7));
         }
     }
 }

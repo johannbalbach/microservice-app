@@ -22,6 +22,7 @@ namespace Dictionary.Application.Controllers
             _dictionaryService = enrollmentService;
         }
 
+        [Authorize(Policy = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Response<string>>> ImportDictionary([FromQuery]ImportTypeEnum importType1, int page, int size)
         {
@@ -36,7 +37,7 @@ namespace Dictionary.Application.Controllers
             return await _dictionaryService.GetFaculties();
         }
 
-        [Authorize(Policy = "Manager")]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering([FromQuery] ProgramsFilterQuery query)
         {

@@ -11,6 +11,6 @@ namespace Shared.DTO
         public string Email { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public RoleEnum? Role { get; set; }
+        public List<RoleEnum> Roles { get; set; }
     }
 }

@@ -58,25 +58,6 @@ app.UseAuthentication();
 
 app.UseMiddleware<TokenCatchMiddleware>();
 
-app.Use(async (context, next) =>
-{
-    if (context.Request.Headers.ContainsKey("Authorization")) //AuthenticationHelper.ValidateToken(context.Request.Headers["Authorization"]
-    {
-        using (var client = new HttpClient())
-        {
-            client.BaseAddress = new Uri("http://localhost:5012/");
-            var response = await client.GetAsync("api/user/check-token");
-            if (!response.IsSuccessStatusCode)
-            {
-                context.Response.StatusCode = 401;
-                return;
-            }
-        }
-    }
-
-    await next();
-});
-
 app.UseAuthorization();
 
 app.UseExceptionHandler();

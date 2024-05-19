@@ -381,6 +381,12 @@ namespace User.BL.Services
                 TotalCount = managersList.Count
             };*/
         }
+        public async Task<ActionResult<Response>> CheckToken(string token)
+        {
+            await _IsTokenValid(token);
+
+            return new Response { Status = "200", Message = "VSE OK" };
+        }
 
         private async Task<bool> CheckAssign(Guid ApplicantId, Guid ManagerId)
         {

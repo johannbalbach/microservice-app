@@ -41,6 +41,13 @@
     "GetProfile": "/user/getProfile",
     "PutProfile": "/user/putProfile",
     "RegisterApplicant": "/user/registerApplicant",
-    "RegisterUser": "/user/registerUser"
+    "RegisterUser": "/user/registerUser",
+    "CheckToken": "/api/user/check-token",
+    "AddMainManager": "/management/addMainManager/{userId}",
+    "AddManager": "/management/addManager",
+    "EditApplicantByIdManager": "/management/editApplicant/{id}",
+    "GetApplicantByIdManager": "/management/getApplicant/{id}",
+    "GetApplicantsListWithFiltering": "/management/getListOfApplicants",
+    "GetListOfManagersWithFiltering": "/management/getListOfManagers"
   }
 }

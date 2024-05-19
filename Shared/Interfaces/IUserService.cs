@@ -21,5 +21,6 @@ namespace Shared.Interfaces
         Task<ActionResult<ApplicantProfileDTO>> GetApplicantByIdManager(Guid id);
         Task<ActionResult<ApplicantWithPaginationInfo>> GetApplicantsListWithFiltering(ApplicantsFilterQuery query);
         Task<ActionResult<ManagerWithPaginationInfo>> GetListOfManagersWithFiltering(ManagersFilterQuery query, string email);
+        Task<ActionResult<Response>> CheckToken(string token);
     }
 }

@@ -26,7 +26,6 @@ builder.Services.AddMassTransit(x =>
 builder.Services.AddCommonServices();
 builder.Services.AddAuth();
 
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 

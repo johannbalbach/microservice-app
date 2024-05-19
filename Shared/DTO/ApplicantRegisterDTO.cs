@@ -10,11 +10,13 @@ namespace Shared.DTO
     {
         [Required]
         public string FullName { get; set; }
-        public DateTime? BirthDate { get; set; }
+        [BirthDateValidator]
+        public DateTime BirthDate { get; set; }
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public GenderEnum? Gender { get; set; }
         public string? Citizenship { get; set; }
-        public string? PhoneNumber { get; set; }
+        [PhoneNumberValidator]
+        public string PhoneNumber { get; set; }
         [Required]
         [EmailAddress]
         public string Email { get; set; }
