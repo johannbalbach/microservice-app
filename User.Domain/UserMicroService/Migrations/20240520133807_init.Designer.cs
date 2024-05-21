@@ -13,15 +13,15 @@ using User.Domain.Context;
 namespace User.Domain.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20240416080917_applicant_manager_added")]
-    partial class applicant_manager_added
+    [Migration("20240520133807_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "8.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -172,8 +172,8 @@ namespace User.Domain.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("FacultyId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("FacultyId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 

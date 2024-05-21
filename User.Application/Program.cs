@@ -4,6 +4,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces;
+using User.BL.Consumers;
 using User.BL.MappingProfile;
 using User.BL.Services;
 using User.Domain.Context;
@@ -23,6 +24,7 @@ builder.Services.AddMassTransit(x =>
         cfg.ConfigureEndpoints(context);
     });
     x.AddConsumer<GetUserConsumer>();
+    x.AddConsumer<AddDocumentConsumer>();
 });
 
 builder.Services.AddCommonServices();
@@ -44,7 +46,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())    
 {
     app.UseSwagger();
     app.UseSwaggerUI();

@@ -7,8 +7,25 @@ using Dictionary.Domain.Repository;
 using Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Common.Extensions;
+using MassTransit;
+using Dictionary.BL.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(new Uri("rabbitmq://localhost"), h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+        cfg.ConfigureEndpoints(context);
+    });
+    x.AddConsumer<ProgramExistConsumer>();
+    x.AddConsumer<EntityExistConsumer>();
+});
 
 builder.Services.AddCommonServices();
 builder.Services.AddAuth();

@@ -25,6 +25,7 @@ namespace Enrollment.BL.Services
         private readonly IMapper _mapper;
         private readonly IRequestClient<GetUserDTORequest> _getUserRequestClient;
         private readonly IRequestClient<GetProgramExistBoolRequest> _getDictionaryRequestClient;
+        private readonly IRequestClient<AddAttributeToUserRequest> _addAttributeToUserClient;
 
         public EnrollmentService(AppDbContext context, IMapper mapper, IBus bus)
         {
@@ -32,6 +33,7 @@ namespace Enrollment.BL.Services
             _mapper = mapper;
             _getUserRequestClient = bus.CreateRequestClient<GetUserDTORequest>();
             _getDictionaryRequestClient = bus.CreateRequestClient<GetProgramExistBoolRequest>();
+            _addAttributeToUserClient = bus.CreateRequestClient<AddAttributeToUserRequest>();
         }
         public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId, Guid managerId)
         {
@@ -235,6 +237,11 @@ namespace Enrollment.BL.Services
             await _context.SaveChangesAsync();
 
             return new Response("Admission successfully removed");
+        }
+
+        private async Task AddAdmissionToUser(Guid userId, Guid admissionId)
+        {
+
         }
         private async Task<bool> IsProgramExist(Guid id)
         {

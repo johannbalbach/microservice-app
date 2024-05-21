@@ -2,6 +2,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Shared.DTO.ServiceBusDTO;
+using Shared.Enums;
 using Shared.Exceptions;
 using Shared.Interfaces;
 using System;
@@ -37,6 +38,24 @@ namespace User.BL.Services
                 throw new InvalidLoginException("user with that Guid doesnt exist");
 
             return new UserRights { Id = temp.Id, Roles = temp.Roles };
+        }
+        public async Task AddDocumentToUser(AddAttributeToUserRequest req)
+        {
+            var applicant = await _context.Applicants.SingleOrDefaultAsync(u => u.Id == req.UserId);
+            if (applicant == null)
+                throw new InvalidLoginException("user with that Guid doesnt exist");
+
+            switch (req.UserAttributes) 
+            {
+                case UserAttributes.Enrollment:
+                    applicant.Enrollments.Add(req.AttributeId);
+                    await _context.SaveChangesAsync();
+                    return;
+                case UserAttributes.Document:
+                    applicant.Documents.Add(req.AttributeId);
+                    await _context.SaveChangesAsync();
+                    return;
+            }
         }
     }
 }

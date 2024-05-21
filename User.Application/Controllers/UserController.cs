@@ -103,7 +103,7 @@ namespace User.Application.Controllers
         [HttpPost]
         [Authorize(Policy = "Admin")]
         [Route("/management/addManager")]
-        public async Task<ActionResult<Response>> AddManager([FromBody] UserRegisterDTO body)
+        public async Task<ActionResult<Response>> AddManager([FromBody] ManagerRegisterDTO body)
         {
             return await _userService.AddManager(body);
         }

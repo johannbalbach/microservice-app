@@ -26,12 +26,14 @@ namespace User.BL.Services
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
         private readonly IRequestClient<GetManagerAccessBoolRequest> _getEnrollmentRequestClient;
+        private readonly IRequestClient<GetDictionaryEntityExistBoolRequest> _getDictionaryRequestClient;
         public UserService(AuthDbContext context, IMapper mapper, ITokenService tokenService, IBus bus)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
             _getEnrollmentRequestClient = bus.CreateRequestClient<GetManagerAccessBoolRequest>();
+            _getDictionaryRequestClient = bus.CreateRequestClient<GetDictionaryEntityExistBoolRequest>();
         }
         public async Task<ActionResult<Response>> ChangePassword(string password, string email)
         {
@@ -209,23 +211,46 @@ namespace User.BL.Services
 
             if (user == null)
                 throw new NotFoundException("User with that guid not found");
+            var manager = new Manager { User = user, FacultyId = null, Id = userId };
 
             if (!user.Roles.Contains(RoleEnum.MainManager))
             {
                 user.Roles.Add(RoleEnum.MainManager);
                 await _context.SaveChangesAsync();
             }
+            if (await _IsManagerInDb(userId))
+            {
+                user.Roles.Remove(RoleEnum.Manager);
+
+                var existManager = await _context.Managers.FirstOrDefaultAsync(x => x.Id == userId);
+                _context.Managers.Remove(existManager);
+                await _context.Managers.AddAsync(manager);
+                await _context.SaveChangesAsync();
+
+                return new Response { Status = "200", Message = "Manager successfully promoted to main manager" };
+            }
 
             return new Response { Status = "200", Message = "Main manager added successfully" };
         }
 
-        public async Task<ActionResult<Response>> AddManager(UserRegisterDTO body)
+        public async Task<ActionResult<Response>> AddManager(ManagerRegisterDTO body)
         {
+            if (!(await IsFacultyExist(body.FacultyId)))
+            {
+                throw new NotFoundException("Faculty with that guid not found");
+            }
+            
             var user = _mapper.Map<UserE>(body);
             user.Id = Guid.NewGuid();
             user.NormalizedEmail = body.Email.Normalize();
             user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
             user.Roles.Add(RoleEnum.Manager);
+
+            var manager = new Manager{ 
+                User = user,
+                FacultyId = body.FacultyId,
+                Id = user.Id
+            };
 
             if (await _IsUserInDb(user))
             {
@@ -233,6 +258,7 @@ namespace User.BL.Services
             }
 
             await _context.Users.AddAsync(user);
+            await _context.Managers.AddAsync(manager);
             await _context.SaveChangesAsync();
 
             return new Response { Status = "200", Message = "Manager added successfully" };
@@ -387,7 +413,12 @@ namespace User.BL.Services
 
             return new Response { Status = "200", Message = "VSE OK" };
         }
+        private async Task<bool> IsFacultyExist(Guid facultyId)
+        {
+            var response = await _getDictionaryRequestClient.GetResponse<DictionaryEntityExistBool>(new GetDictionaryEntityExistBoolRequest { EntityId = facultyId, entityType = Shared.Enums.DictionaryEntities.Faculty});
 
+            return response.Message.Exist;
+        }
         private async Task<bool> CheckAssign(Guid ApplicantId, Guid ManagerId)
         {
             var response = await _getEnrollmentRequestClient.GetResponse<ManagerAccess>(new GetManagerAccessBoolRequest { ApplicantId = ApplicantId, ManagerId = ManagerId });
@@ -396,10 +427,13 @@ namespace User.BL.Services
         }
         private async Task<bool> _IsUserInDb(UserE user)
         {
-            if (user == null)
-                return false;
-
             var temp = await _context.Users.SingleOrDefaultAsync(h => h.Email == user.Email);
+
+            return !(temp == null);
+        }
+        private async Task<bool> _IsManagerInDb(Guid managerId)
+        {
+            var temp = await _context.Managers.SingleOrDefaultAsync(h => h.Id == managerId);
 
             return !(temp == null);
         }
