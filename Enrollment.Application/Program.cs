@@ -23,6 +23,7 @@ builder.Services.AddMassTransit(x =>
     });
     x.AddConsumer<GetManagerAccessConsumer>();
 });
+
 builder.Services.AddCommonServices();
 builder.Services.AddAuth();
 

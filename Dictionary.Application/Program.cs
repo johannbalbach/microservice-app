@@ -40,7 +40,8 @@ builder.Services.AddScoped<IRepository<EducationLevel>, Repository<EducationLeve
 builder.Services.AddScoped<IRepository<DocumentType>, Repository<DocumentType>>();
 
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
-builder.Services.AddScoped<IExternalSystemService, ExternalSystemService>();
+builder.Services.AddTransient<IExternalSystemService, ExternalSystemService>();
+builder.Services.AddScoped<IDictionaryRequestService, DictionaryRequestService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();

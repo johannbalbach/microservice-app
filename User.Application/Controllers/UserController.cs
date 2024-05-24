@@ -63,6 +63,17 @@ namespace User.Application.Controllers
 
             return await _userService.UserProfileGet(userEmailClaim);
         }
+
+        [Authorize(Policy = "Applicant")]
+        [HttpGet]
+        public async Task<ActionResult<ApplicantProfileDTO>> GetApplicantProfile()
+        {
+            var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            if (userEmailClaim == null)
+                throw new InvalidTokenException("Token not found");
+
+            return await _userService.ApplicantProfileGet(userEmailClaim);
+        }
         [HttpPost]
         public async Task<ActionResult<Response>> UpdateToken([FromBody] string refresh_token)
         {

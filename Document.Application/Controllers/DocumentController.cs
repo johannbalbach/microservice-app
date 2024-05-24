@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Shared.Models;
 using Shared.DTO;
@@ -11,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace Document.Application.Controllers
 {
     [ApiController]
+    [Route("api/")]
     public class DocumentsController : ControllerBase
     {
         private readonly IDocumentService _documentsService;
@@ -31,9 +30,9 @@ namespace Document.Application.Controllers
 
             return await _documentsService.AddApplicantEducationDocument(body, files, userEmailClaim);
         }
-
-        [Authorize]
+        
         [HttpPost]
+        [Authorize]
         [Route("/documents/addPassport")]
         public async Task<ActionResult<Response>> AddApplicantPassport(List<IFormFile> files, [FromQuery] PassportCreateDTO body)
         {

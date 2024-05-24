@@ -110,6 +110,22 @@ namespace User.BL.Services
 
             return _mapper.Map<UserProfileDTO>(temp);
         }
+        public async Task<ActionResult<ApplicantProfileDTO>> ApplicantProfileGet(string email)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(h => h.Email == email);
+
+            if (user == null)
+                throw new InvalidLoginException();
+
+            var applicant = await _context.Users.SingleOrDefaultAsync(a => a.Id == user.Id);
+
+            var applicantDto = _mapper.Map<ApplicantProfileDTO>(applicant);
+            applicantDto.FullName = user.FullName;
+            applicantDto.Email = user.Email;
+            applicantDto.Roles = user.Roles;
+
+            return applicantDto;
+        }
 
         public async Task<ActionResult<UserProfileDTO>> UserProfilePut(UserProfileEditDTO user, string email)
         {

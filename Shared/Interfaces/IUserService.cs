@@ -11,6 +11,7 @@ namespace Shared.Interfaces
         Task<ActionResult<Response>> LogoutUser(string token);
         Task<ActionResult<Response>> LoginUser(LoginCredentials body);
         Task<ActionResult<UserProfileDTO>> UserProfileGet(string email);
+        Task<ActionResult<ApplicantProfileDTO>> ApplicantProfileGet(string email);
         Task<ActionResult<UserProfileDTO>> UserProfilePut(UserProfileEditDTO body, string email);
         Task<ActionResult<Response>> UserRegisterApplicantPost(ApplicantRegisterDTO body);
         Task<ActionResult<Response>> UserRegister(UserRegisterDTO body);

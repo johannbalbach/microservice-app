@@ -1,6 +1,8 @@
-﻿using Document.Domain.Context;
+﻿using Common.ServiceBus;
+using Document.Domain.Context;
 using Document.Domain.Entities;
 using MassTransit;
+using MassTransit.Transports;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +24,14 @@ namespace Document.BL.Services
         private readonly DocumentContext _context;
         private readonly IRequestClient<GetUserDTORequest> _getUserRequestClient;
         private readonly IRequestClient<GetManagerAccessBoolRequest> _getEnrollmentRequestClient;
+        private readonly IRabbitMqService _rabbitMqService;
 
-        public DocumentsService(DocumentContext context, IBus bus)
+        public DocumentsService(DocumentContext context, IBus bus, IRabbitMqService rabbitMqService)
         {
             _context = context;
             _getUserRequestClient = bus.CreateRequestClient<GetUserDTORequest>();
             _getEnrollmentRequestClient = bus.CreateRequestClient<GetManagerAccessBoolRequest>();
+            _rabbitMqService = rabbitMqService;
         }
         public async Task<ActionResult<Response>> AddApplicantEducationDocument(DocumentCreateDTO body, List<IFormFile> files, string email)
         {
@@ -36,7 +40,7 @@ namespace Document.BL.Services
                 throw new BadRequestException("you already have education document with this type");
 
             var educationDocument = new EducationDocument(body.Name, body.DocumentTypeId);
-            educationDocument.ApplicantId = await IsUserApplicant(email);
+            educationDocument.ApplicantId = await GetApplicantId(email);
 
             foreach (IFormFile file in files)
             {
@@ -45,6 +49,7 @@ namespace Document.BL.Services
                 educationDocument.FilesId.Add(fileModel.Id);
             }
 
+            await SendDocumentRequest(educationDocument.ApplicantId, educationDocument.Id);
             _context.EducationDocuments.Add(educationDocument);
             await _context.SaveChangesAsync();
 
@@ -58,7 +63,7 @@ namespace Document.BL.Services
                 throw new BadRequestException("you already have passport");
 
             var passport = new Passport(body.SeriesNumber, body.IssuedBy, body.PlaceOfBirth, body.IssuedDate, body.BirthDate);
-            passport.ApplicantId = await IsUserApplicant(email);
+            passport.ApplicantId = await GetApplicantId(email);
 
             foreach (IFormFile file in files)
             {
@@ -67,6 +72,7 @@ namespace Document.BL.Services
                 passport.FilesId.Add(fileModel.Id);
             }
 
+            await SendDocumentRequest(passport.ApplicantId, passport.Id);
             _context.Passports.Add(passport);
             await _context.SaveChangesAsync();
 
@@ -130,7 +136,7 @@ namespace Document.BL.Services
 
         public async Task<ActionResult<Response>> EditPassport(PassportEditDTO body, string email)
         {
-            var userId = await IsUserApplicant(email);
+            var userId = await GetApplicantId(email);
 
             return await _editPassport(body, userId);
         }
@@ -142,7 +148,7 @@ namespace Document.BL.Services
         }
         public async Task<ActionResult<Response>> EditEducationDocument(EducationDocumentEditDTO body, string email)
         {
-            var userId = await IsUserApplicant(email);
+            var userId = await GetApplicantId(email);
 
             return await _editEducationDocument(body, userId);
         }
@@ -155,7 +161,7 @@ namespace Document.BL.Services
 
         public async Task<ActionResult<EducationDocumentViewDTO>> GetEducationDocument(string email, Guid DocumentTypeId)
         {
-            var userId = await IsUserApplicant(email);
+            var userId = await GetApplicantId(email);
 
             return await _getEducationDocument(userId, DocumentTypeId);
         }
@@ -169,7 +175,7 @@ namespace Document.BL.Services
 
         public async Task<ActionResult<PassportViewDTO>> GetPassport(string email)
         {
-            var userId = await IsUserApplicant(email);
+            var userId = await GetApplicantId(email);
 
             return await _getPassport(userId);
         }
@@ -283,7 +289,7 @@ namespace Document.BL.Services
                     throw new BadRequestException("Only image files are allowed for education documents.");
             }
         }
-        private async Task<Guid> IsUserApplicant(string email)
+        private async Task<Guid> GetApplicantId(string email)
         {
             var user = await GetUser(email);
 
@@ -361,6 +367,27 @@ namespace Document.BL.Services
             var response = await _getUserRequestClient.GetResponse<UserRights>(new GetUserDTORequest { UserId = id });
 
             return response.Message;
+        }
+        private async Task SendDocumentRequest(string applicantEmail, Guid documentGuid)
+        {
+            var message = new DocumentRequestMessage
+            {
+                ApplicantEmail = applicantEmail,
+                DocumentGuid = documentGuid
+            };
+
+            _rabbitMqService.SendMessage(message);
+        }
+
+        private async Task SendDocumentRequest(Guid applicantId, Guid documentGuid)
+        {
+            var message = new DocumentRequestMessage
+            {
+                ApplicantId = applicantId,
+                DocumentGuid = documentGuid
+            };
+
+            _rabbitMqService.SendMessage(message);
         }
     }
 }

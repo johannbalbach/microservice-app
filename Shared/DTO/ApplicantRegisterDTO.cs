@@ -11,7 +11,7 @@ namespace Shared.DTO
         [Required]
         public string FullName { get; set; }
         [BirthDateValidator]
-        public DateTime BirthDate { get; set; }
+        public DateTime? BirthDate { get; set; }
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public GenderEnum? Gender { get; set; }
         public string? Citizenship { get; set; }

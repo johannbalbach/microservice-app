@@ -73,7 +73,6 @@ namespace Common.Extensions
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(jwtOptions =>
             {
                 jwtOptions.TokenValidationParameters = new TokenValidationParameters
@@ -97,12 +96,14 @@ namespace Common.Extensions
                     {
                         // Логирование ошибки аутентификации
                         Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                        Console.WriteLine($"HttpContext request headers: {context.HttpContext.Request.Headers.Authorization}");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
                         // Логирование успешной валидации токена
                         Console.WriteLine("Token validated successfully.");
+                        Console.WriteLine($"HttpContext request headers: {context.HttpContext.Request.Headers.Authorization}");
                         return Task.CompletedTask;
                     }
                 };

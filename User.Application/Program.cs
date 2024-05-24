@@ -25,6 +25,7 @@ builder.Services.AddMassTransit(x =>
     });
     x.AddConsumer<GetUserConsumer>();
     x.AddConsumer<AddDocumentConsumer>();
+    x.AddConsumer<DocumentRequestConsumer>();
 });
 
 builder.Services.AddCommonServices();
@@ -55,6 +56,16 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Headers.ContainsKey("Authorization")) //AuthenticationHelper.ValidateToken(context.Request.Headers["Authorization"]
+    {
+
+    }
+
+    await next();
+});
 
 app.UseAuthentication();
 
