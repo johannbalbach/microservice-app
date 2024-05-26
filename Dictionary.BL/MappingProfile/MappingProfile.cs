@@ -9,6 +9,8 @@ namespace Dictionary.BL.MappingProfile
         public MappingProfile()
         {
             CreateMap<Faculty, FacultyDTO>();
+            CreateMap<EducationLevel, EducationLevelDTO>();
+            CreateMap<DocumentType, DocumentTypeDTO>();
             CreateMap<UniversityProgram, ProgramDTO>();
         }
     }

@@ -25,11 +25,13 @@ builder.Services.AddMassTransit(x =>
     });
     x.AddConsumer<ProgramExistConsumer>();
     x.AddConsumer<EntityExistConsumer>();
+    x.AddConsumer<DocTypeEducationLevelBelongsConsumer>();
+    x.AddConsumer<ProgramsEducationLevelBelongConsumer>();
+    x.AddConsumer<ProgramDocumentsMatchesConsumer>();
 });
 
 builder.Services.AddCommonServices();
 builder.Services.AddAuth();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

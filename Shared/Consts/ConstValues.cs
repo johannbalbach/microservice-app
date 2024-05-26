@@ -10,5 +10,6 @@ namespace Shared.Consts
     {
         public const string FileStoreName = "FileStore";
         public const string FileStoreLocation = "../Document.Domain";
+        public const int MaximumAdmissionsCount = 5;
     }
 }

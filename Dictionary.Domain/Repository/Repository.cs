@@ -1,4 +1,5 @@
 ﻿using Dictionary.Domain.Context;
+using Dictionary.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dictionary.Domain.Repository
@@ -24,7 +25,7 @@ namespace Dictionary.Domain.Repository
         }
 
         public async Task<IEnumerable<TEntity>> GetAllAsync()
-        {
+        {   
             return await _dbSet.ToListAsync();
         }
 

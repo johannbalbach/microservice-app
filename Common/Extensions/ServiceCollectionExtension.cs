@@ -1,10 +1,13 @@
-﻿using MassTransit;
+﻿using Common.Helpers;
+using MassTransit;
 using MassTransit.AspNetCoreIntegration.HealthChecks;
+using MassTransit.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shared.Interfaces;
@@ -73,35 +76,31 @@ namespace Common.Extensions
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(jwtOptions =>
             {
+                jwtOptions.UseSecurityTokenValidators = true;
                 jwtOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidIssuer = JWTConfiguration.Issuer,
-                    ValidateIssuer = true,
+                    ValidateIssuer = false,
                     ValidAudience = JWTConfiguration.Audience,
-                    ValidateAudience = true,
+                    ValidateAudience = false,
                     IssuerSigningKey = JWTConfiguration.GetSymmetricSecurityKey(),
-                    ValidateIssuerSigningKey = true,
-                    ValidateLifetime = true,
-                    LifetimeValidator = (before, expires, token, parameters) =>
-                    {
-                        var utcNow = DateTime.UtcNow;
-                        return before <= utcNow && utcNow < expires;
-                    }
+                    ValidateIssuerSigningKey = false,
+                    ValidateLifetime = false
                 };
+                jwtOptions.TokenHandlers.Add(new BearerTokenHandler());
                 jwtOptions.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        // Логирование ошибки аутентификации
                         Console.WriteLine($"Authentication failed: {context.Exception.Message}");
                         Console.WriteLine($"HttpContext request headers: {context.HttpContext.Request.Headers.Authorization}");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
-                        // Логирование успешной валидации токена
                         Console.WriteLine("Token validated successfully.");
                         Console.WriteLine($"HttpContext request headers: {context.HttpContext.Request.Headers.Authorization}");
                         return Task.CompletedTask;

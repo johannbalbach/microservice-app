@@ -22,6 +22,7 @@ builder.Services.AddMassTransit(x =>
         cfg.ConfigureEndpoints(context);
     });
     x.AddConsumer<GetManagerAccessConsumer>();
+    x.AddConsumer<ApplicantProgramsDocumentsConsumer>();
 });
 
 builder.Services.AddCommonServices();
@@ -47,9 +48,9 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseAuthentication();
-
 app.UseMiddleware<TokenCatchMiddleware>();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

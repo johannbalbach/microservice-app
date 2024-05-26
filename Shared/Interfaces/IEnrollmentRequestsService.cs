@@ -9,5 +9,6 @@ namespace Shared.Interfaces
     public interface IEnrollmentRequestsService
     {
         Task<bool> CheckManagerAssign(Guid ApplicantId, Guid ManagerId);
+        Task<List<Guid>> GetApplicantProgramsId(Guid ApplicantId);
     }
 }

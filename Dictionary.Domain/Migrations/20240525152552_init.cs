@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -31,7 +32,8 @@ namespace Dictionary.Domain.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    createTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    createTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TEST = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -45,7 +47,8 @@ namespace Dictionary.Domain.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    EducationLevelId = table.Column<int>(type: "integer", nullable: false)
+                    EducationLevelId = table.Column<int>(type: "integer", nullable: false),
+                    NextEducationLevelsId = table.Column<List<int>>(type: "integer[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -92,30 +95,30 @@ namespace Dictionary.Domain.Migrations
                 name: "DocumentTypeEducationLevel",
                 columns: table => new
                 {
-                    DocumentTypesId = table.Column<Guid>(type: "uuid", nullable: false),
-                    NextEducationLevelsId = table.Column<int>(type: "integer", nullable: false)
+                    DocumentTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    NextEducationLevelId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DocumentTypeEducationLevel", x => new { x.DocumentTypesId, x.NextEducationLevelsId });
+                    table.PrimaryKey("PK_DocumentTypeEducationLevel", x => new { x.DocumentTypeId, x.NextEducationLevelId });
                     table.ForeignKey(
-                        name: "FK_DocumentTypeEducationLevel_DocumentTypes_DocumentTypesId",
-                        column: x => x.DocumentTypesId,
+                        name: "FK_DocumentTypeEducationLevel_DocumentTypes_DocumentTypeId",
+                        column: x => x.DocumentTypeId,
                         principalTable: "DocumentTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_DocumentTypeEducationLevel_EducationLevels_NextEducationLev~",
-                        column: x => x.NextEducationLevelsId,
+                        column: x => x.NextEducationLevelId,
                         principalTable: "EducationLevels",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_DocumentTypeEducationLevel_NextEducationLevelsId",
+                name: "IX_DocumentTypeEducationLevel_NextEducationLevelId",
                 table: "DocumentTypeEducationLevel",
-                column: "NextEducationLevelsId");
+                column: "NextEducationLevelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DocumentTypes_EducationLevelId",

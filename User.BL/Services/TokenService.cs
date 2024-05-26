@@ -31,7 +31,7 @@ namespace User.BL.Services
                 Subject = GetClaimsIdentity(email, role),
                 Issuer = JWTConfiguration.Issuer,
                 Audience = JWTConfiguration.Audience,
-                Expires = DateTime.Now.AddMinutes(JWTConfiguration.AccessLifeTime),
+                Expires = DateTime.UtcNow.AddMinutes(JWTConfiguration.AccessLifeTime),
                 SigningCredentials = signinCredentials
             };
 

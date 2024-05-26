@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Shared.Models.Enums;
 using DocumentType = Dictionary.Domain.Entities.DocumentType;
 using System.Reflection.Emit;
+using System;
 
 namespace Dictionary.BL.Services
 {
@@ -82,10 +83,16 @@ namespace Dictionary.BL.Services
                                 var educationLevel = await _educationLevelRepository.GetByIdIntAsync(level.Id);
                                 levels.Add(educationLevel);
                                 
+                                
                                 educationLevel.DocumentTypes.Add(doc);
                             }
                         }
                         doc.NextEducationLevels = levels;
+                        doc.EducationLevelId = doc.EducationLevel.Id;
+                        if (doc.NextEducationLevels != null)
+                        {
+                            doc.NextEducationLevels.ForEach(l => doc.NextEducationLevelsId.Add(l.Id));
+                        }
 
                         var existingDoc = await _documentTypeRepository.GetByIdAsync(doc.Id);
                         if (existingDoc != null)
@@ -178,6 +185,32 @@ namespace Dictionary.BL.Services
             var faculties = await _facultyRepository.GetAllAsync();
             var facultiesDTO = faculties.Select(e => _mapper.Map<FacultyDTO>(e)).ToList();
             return facultiesDTO;
+        }
+
+        public async Task<ActionResult<List<DocumentTypeDTO>>> GetEducationDocuments()
+        {
+            var documents = await _documentTypeRepository.GetAllAsync();
+            var documentsDtos = new List<DocumentTypeDTO>();
+
+            foreach (var document in documents)
+            {
+                var documentDto = _mapper.Map<DocumentTypeDTO>(document);
+
+                documentDto.EducationLevel = document.EducationLevelId;
+
+                if (document.NextEducationLevelsId != null)
+                    document.NextEducationLevelsId.ForEach(l => documentDto.NextEducationLevels.Add(l));
+
+                documentsDtos.Add(documentDto);
+            }
+
+            return documentsDtos;
+        }
+        public async Task<ActionResult<List<EducationLevelDTO>>> GetEducationLevels()
+        {
+            var levels = await _educationLevelRepository.GetAllAsync();
+            var levelsDTO = levels.Select(e => _mapper.Map<EducationLevelDTO>(e)).ToList();
+            return levelsDTO;
         }
 
         public async Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering(ProgramsFilterQuery query)

@@ -9,6 +9,8 @@ namespace Dictionary.Domain.Entities
         public DateTime CreateTime { get; set; }
         public string Name { get; set; }
         public EducationLevel EducationLevel { get; set; } = null!;
+        public int EducationLevelId { get; set; }
         public List<EducationLevel>? NextEducationLevels { get; set;} = null!;
+        public List<int> NextEducationLevelsId { get; set; } = new List<int>();
     }
 }

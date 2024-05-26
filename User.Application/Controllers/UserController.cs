@@ -57,6 +57,7 @@ namespace User.Application.Controllers
         [HttpGet]
         public async Task<ActionResult<UserProfileDTO>> GetProfile()
         {
+            Console.WriteLine("OK");
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");
@@ -68,6 +69,7 @@ namespace User.Application.Controllers
         [HttpGet]
         public async Task<ActionResult<ApplicantProfileDTO>> GetApplicantProfile()
         {
+            Console.WriteLine("OK");
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
             if (userEmailClaim == null)
                 throw new InvalidTokenException("Token not found");

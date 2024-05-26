@@ -24,6 +24,8 @@ namespace Document.BL.Services
         private readonly DocumentContext _context;
         private readonly IRequestClient<GetUserDTORequest> _getUserRequestClient;
         private readonly IRequestClient<GetManagerAccessBoolRequest> _getEnrollmentRequestClient;
+        private readonly IRequestClient<GetApplicantProgramsDocuments> _getApplicantProgramsClient;
+        private readonly IRequestClient<GetProgramsAndDocumentsMatches> _getProgramsAndDocumentClient;
         private readonly IRabbitMqService _rabbitMqService;
 
         public DocumentsService(DocumentContext context, IBus bus, IRabbitMqService rabbitMqService)
@@ -32,12 +34,26 @@ namespace Document.BL.Services
             _getUserRequestClient = bus.CreateRequestClient<GetUserDTORequest>();
             _getEnrollmentRequestClient = bus.CreateRequestClient<GetManagerAccessBoolRequest>();
             _rabbitMqService = rabbitMqService;
+            _getApplicantProgramsClient = bus.CreateRequestClient<GetApplicantProgramsDocuments>();
+            _getProgramsAndDocumentClient = bus.CreateRequestClient<GetProgramsAndDocumentsMatches>();
         }
         public async Task<ActionResult<Response>> AddApplicantEducationDocument(DocumentCreateDTO body, List<IFormFile> files, string email)
         {
             IsFilesImages(files);
-            if (await HaveUserEducationDocument(email, body.DocumentTypeId))
+
+            var user = await GetUser(email);
+
+            var existDocument = await _context.EducationDocuments.FirstOrDefaultAsync(ed => ed.DocumentTypeGuid == body.DocumentTypeId && ed.ApplicantId == user.Id);
+            if (existDocument != null)
                 throw new BadRequestException("you already have education document with this type");
+
+            var existProgramsDocuments = await GetProgramsDocumentsGuid(user.Id);
+            if (!existProgramsDocuments.isEmpty)
+            {
+                if (!await CheckProgramsAndDocumentConflict(existProgramsDocuments.ProgramsDocumentsIds, body.DocumentTypeId, user.Id))
+                    throw new BadRequestException("You cant add this documentType because its conflicts with your Admissions. Please Delete Admissions first or add documents to not conflict with it");
+            }
+                
 
             var educationDocument = new EducationDocument(body.Name, body.DocumentTypeId);
             educationDocument.ApplicantId = await GetApplicantId(email);
@@ -82,10 +98,18 @@ namespace Document.BL.Services
         public async Task<ActionResult<Response>> DeleteDocumentScan(Guid scanId, string email)
         {
             var existScan = await _context.fileDocuments.FirstOrDefaultAsync(a => a.Id == scanId);
-
+            
             if (existScan == null)
                 throw new BadRequestException("this scan doesnt exist");
             await CheckUserAccess(email, existScan);
+
+            var pas = await _context.Passports.FirstOrDefaultAsync(a => a.FilesId.Contains(scanId));
+            var doc = await _context.EducationDocuments.FirstOrDefaultAsync(a => a.FilesId.Contains(scanId));
+
+            if (pas != null)
+                pas.FilesId.Remove(scanId);
+            if (doc != null)
+                doc.FilesId.Remove(scanId);
 
             _context.Remove(existScan);
             await _context.SaveChangesAsync();
@@ -102,7 +126,7 @@ namespace Document.BL.Services
             await CheckUserAccess(email, existScan);
 
             Console.WriteLine(existScan.Path);
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existScan.Path);
+            var filePath = existScan.Path; //Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existScan.Path);
             Console.WriteLine(filePath);
 
             if (!System.IO.File.Exists(filePath))
@@ -190,7 +214,7 @@ namespace Document.BL.Services
         private async Task<PassportViewDTO> _getPassport(Guid userId)
         {
 
-            var passport = await _context.Passports.FirstOrDefaultAsync(d => d.Id == userId);
+            var passport = await _context.Passports.FirstOrDefaultAsync(d => d.ApplicantId == userId);
             if (passport == null)
                 throw new NotFoundException("this user havent any passport");
 
@@ -208,7 +232,7 @@ namespace Document.BL.Services
         }
         private async Task<EducationDocumentViewDTO> _getEducationDocument(Guid userId, Guid DocumentTypeId)
         {
-            var educationDocument = await _context.EducationDocuments.FirstOrDefaultAsync(d => d.Id == userId && d.DocumentTypeGuid == DocumentTypeId);
+            var educationDocument = await _context.EducationDocuments.FirstOrDefaultAsync(d => d.ApplicantId == userId && d.DocumentTypeGuid == DocumentTypeId);
             if (educationDocument == null)
                 throw new NotFoundException("this user havent any education document");
 
@@ -268,16 +292,11 @@ namespace Document.BL.Services
 
             return fileModel;
         }
-        private async Task<bool> HaveUserEducationDocument(string email, Guid documentTypeId)
-        {
-            var user = await GetUser(email);
-            var existDocument = await _context.EducationDocuments.FirstOrDefaultAsync(ed => ed.DocumentTypeGuid == documentTypeId && ed.ApplicantId == user.Id);
-            return !(existDocument == null);
-        }
         private async Task<bool> HaveUserPassport(string email)
         {
             var user = await GetUser(email);
             var existDocument = await _context.Passports.FirstOrDefaultAsync(ed => ed.ApplicantId == user.Id);
+
             return !(existDocument == null);
         }
 
@@ -368,6 +387,29 @@ namespace Document.BL.Services
 
             return response.Message;
         }
+        private async Task<ApplicantProgramsDocuments> GetProgramsDocumentsGuid(Guid id)
+        {
+            var response = await _getApplicantProgramsClient.GetResponse<ApplicantProgramsDocuments>(new GetApplicantProgramsDocuments { ApplicantId = id });
+            return response.Message;
+        }
+        private async Task<bool> CheckProgramsAndDocumentConflict(List<Guid> programsId, Guid documentTypeId, Guid ApplicantId)
+        {
+            var response = await _getProgramsAndDocumentClient.GetResponse<ProgramDocumentsMatches>(new GetProgramsAndDocumentsMatches { ProgramsIds = programsId });
+            if (response.Message.MatchesDocumentsId.Contains(documentTypeId))
+                return true;
+            var existDocuments = await _context.EducationDocuments.Where(d => d.ApplicantId == ApplicantId).ToListAsync();
+            foreach ( var existDocument in existDocuments)
+            {
+                foreach (var documenttypeId in response.Message.MatchesDocumentsId) 
+                {
+                    if (existDocument.DocumentTypeGuid == documenttypeId)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private async Task SendDocumentRequest(string applicantEmail, Guid documentGuid)
         {
             var message = new DocumentRequestMessage

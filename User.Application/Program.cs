@@ -57,16 +57,6 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.Use(async (context, next) =>
-{
-    if (context.Request.Headers.ContainsKey("Authorization")) //AuthenticationHelper.ValidateToken(context.Request.Headers["Authorization"]
-    {
-
-    }
-
-    await next();
-});
-
 app.UseAuthentication();
 
 app.UseMiddleware<TokenCatchMiddleware>();

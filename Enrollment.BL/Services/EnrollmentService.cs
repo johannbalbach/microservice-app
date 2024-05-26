@@ -6,6 +6,7 @@ using Enrollment.Domain.Models.Query;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Shared.Consts;
 using Shared.DTO.ServiceBusDTO;
 using Shared.Enums;
 using Shared.Exceptions;
@@ -26,6 +27,9 @@ namespace Enrollment.BL.Services
         private readonly IRequestClient<GetUserDTORequest> _getUserRequestClient;
         private readonly IRequestClient<GetProgramExistBoolRequest> _getDictionaryRequestClient;
         private readonly IRequestClient<AddAttributeToUserRequest> _addAttributeToUserClient;
+        private readonly IRequestClient<GetProgramsEducationLevelsBelong> _getProgramEducationLevelClient;
+        private readonly IRequestClient<GetEducationDocumentType> _getDocumentType;
+        private readonly IRequestClient<GetDocTypeEducationLevelBelongs> _getDocumentLevel;
 
         public EnrollmentService(AppDbContext context, IMapper mapper, IBus bus)
         {
@@ -34,6 +38,9 @@ namespace Enrollment.BL.Services
             _getUserRequestClient = bus.CreateRequestClient<GetUserDTORequest>();
             _getDictionaryRequestClient = bus.CreateRequestClient<GetProgramExistBoolRequest>();
             _addAttributeToUserClient = bus.CreateRequestClient<AddAttributeToUserRequest>();
+            _getProgramEducationLevelClient = bus.CreateRequestClient<GetProgramsEducationLevelsBelong>();
+            _getDocumentType = bus.CreateRequestClient<GetEducationDocumentType>();
+            _getDocumentLevel = bus.CreateRequestClient<GetDocTypeEducationLevelBelongs>();
         }
         public async Task<ActionResult<Response>> AssignManagerToAdmission(Guid admissionId, Guid managerId)
         {
@@ -72,12 +79,13 @@ namespace Enrollment.BL.Services
         }
         public async Task<ActionResult<Response>> EditAdmissionStatus(StatusEnum body, Guid id, string email)
         {
+            var user = await GetUser(email);
             var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.Id == id);
 
             if (existAdmission == null)
-            {
                 throw new BadRequestException("this admission doesnt exist");
-            }
+            if (existAdmission.ManagerId != user.Id || user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin))
+                throw new BadRequestException("you havent enough rights to edit this admission");
 
             existAdmission.Status = body;
             await _context.SaveChangesAsync();
@@ -163,7 +171,16 @@ namespace Enrollment.BL.Services
                 throw new NotFoundException("Program with that id doesnt exist");
             
             if (existAdmission != null)
-                throw new BadRequestException("this admission is already exist");
+                throw new BadRequestException("you already have admission to this program");
+
+            var userAdmissions = await _context.Admissions.Where(a => a.ApplicantId == user.Id).ToListAsync();
+            if (userAdmissions.Count >= ConstValues.MaximumAdmissionsCount)
+                throw new BadRequestException("you already have maximum possible admissions");
+            if (userAdmissions.Count > 0)
+                if (!await IsSameLevelForAllPrograms(userAdmissions, id))
+                    throw new BadRequestException("All selected programs must belong to the same level of education");
+
+            await IsValidProgramLevelForEducationDocument(user.Id, id);
 
             var admission = new Admission{
                 Id = Guid.NewGuid(),
@@ -186,13 +203,13 @@ namespace Enrollment.BL.Services
 
             if (priority <= 0)
                 throw new BadRequestException("priority should be > 0");
-            if (await _context.Admissions.Where(a => a.ApplicantId == user.Id).CountAsync() == null)
+            if (await _context.Admissions.Where(a => a.ApplicantId == user.Id).CountAsync() == 0)
                 throw new BadRequestException("you dont have any admission");
             if (priority > await _context.Admissions.Where(a => a.ApplicantId == user.Id).CountAsync())
                 throw new BadRequestException("priority should be < then max admissions count");
             if (existAdmission == null)
                 throw new BadRequestException("this admission doesnt exist");
-            if (existAdmission.ManagerId != user.Id || user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin))
+            if (existAdmission.ManagerId != user.Id || user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin) || existAdmission.ApplicantId != user.Id)
                 throw new BadRequestException("you havent enough rights to edit this admission");
 
             existAdmission.Priority = priority;
@@ -223,7 +240,7 @@ namespace Enrollment.BL.Services
         public async Task<ActionResult<Response>> RemoveAdmissionFromApplicantList(Guid id, string email)
         {
             var user = await GetUser(email);
-            var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.ProgramId == id);
+            var existAdmission = await _context.Admissions.FirstOrDefaultAsync(a => a.Id == id);
 
             if (existAdmission == null)
                 throw new BadRequestException("this admission doesnt exist");
@@ -237,6 +254,33 @@ namespace Enrollment.BL.Services
             await _context.SaveChangesAsync();
 
             return new Response("Admission successfully removed");
+        }
+
+        private async Task IsValidProgramLevelForEducationDocument(Guid applicantId, Guid programId)
+        {
+            var educationDocumentType = await _getDocumentType.GetResponse<EducationDocumentType>(new GetEducationDocumentType { ApplicantId = applicantId });
+            
+            if (educationDocumentType.Message.IsSuccess)
+            {
+                var response = await _getDocumentLevel.GetResponse<DocTypeEducationLevelBelongs>(new GetDocTypeEducationLevelBelongs { DocumentTypeIds = educationDocumentType.Message.DocumentTypeIds, ProgramId = programId });
+
+                if (!response.Message.IsBelongs)
+                    throw new BadRequestException("Your Education Document not allow you to have this level program");
+            }
+        }
+
+        private async Task<bool> IsSameLevelForAllPrograms(List<Admission> admissions, Guid programId)
+        {
+            var distinctLevels = admissions
+                .Select(a => a.ProgramId)
+                .Distinct()
+                .ToList();
+
+            distinctLevels.Add(programId);
+
+            var response = await _getProgramEducationLevelClient.GetResponse<ProgramsEducationLevelsBool>(new GetProgramsEducationLevelsBelong { ProgramsId = distinctLevels });
+
+            return response.Message.Value;
         }
 
         private async Task AddAdmissionToUser(Guid userId, Guid admissionId)
@@ -262,11 +306,12 @@ namespace Enrollment.BL.Services
         }
         private async Task<int> MaxPriority(Guid id)
         {
-           return await _context.Admissions
-                .Where(a => a.ApplicantId == id)
-                .Select(a => a.Priority)
-                .DefaultIfEmpty(0)
-                .MaxAsync();
+            var priorities = await _context.Admissions
+                                           .Where(a => a.ApplicantId == id)
+                                           .Select(a => a.Priority)
+                                           .ToListAsync();
+
+            return priorities.DefaultIfEmpty(0).Max();
         }
     }
 }

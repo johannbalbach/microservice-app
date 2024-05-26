@@ -12,7 +12,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Enrollment.Application.Controllers
 {
     [ApiController]
-    [Route("api/")]
+    [Route("api/enrollment/")]
     public class EnrollmentController: ControllerBase
     {
         private readonly IEnrollmentService _enrollmentService;
@@ -24,7 +24,7 @@ namespace Enrollment.Application.Controllers
 
         [HttpPut]
         [Authorize(Policy = "MainManager")]
-        [Route("enrollment/assignManager/{admissionId}")]
+        [Route("assignManager/{admissionId}")]
         public async Task<ActionResult<Response>> AssignManagerToAdmission([FromRoute][Required] Guid admissionId, Guid managerId)
         {
             return await _enrollmentService.AssignManagerToAdmission(admissionId, managerId);
@@ -32,7 +32,7 @@ namespace Enrollment.Application.Controllers
 
         [HttpPut]
         [Authorize(Policy = "MainManager")]
-        [Route("enrollment/assignManagerToApplicant/{applicantId}")]
+        [Route("assignManagerToApplicant/{applicantId}")]
         public async Task<ActionResult<Response>> AssignManagerToApplicant([FromRoute][Required] Guid applicantId, Guid managerId)
         {
             return await _enrollmentService.AssignManagerToApplicant(applicantId, managerId);
@@ -40,7 +40,7 @@ namespace Enrollment.Application.Controllers
 
         [HttpPut]
         [Authorize(Policy = "Privileged")]
-        [Route("enrollment/editAdmissionStatus/{id}")]
+        [Route("editAdmissionStatus/{id}")]
         public async Task<ActionResult<Response>> EditAdmissionStatus([FromBody] StatusEnum body, [FromRoute][Required] Guid id)
         {
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
@@ -52,7 +52,7 @@ namespace Enrollment.Application.Controllers
 
         [HttpGet]
         [Authorize(Policy = "Privileged")]
-        [Route("enrollment/getAdmissions/{id}")]
+        [Route("getAdmissions/{id}")]
         public async Task<ActionResult<List<AdmissionDTO>>> GetApplicantAdmissions([FromRoute][Required] Guid id)
         {
             return await _enrollmentService.GetApplicantAdmissions(id);
@@ -60,15 +60,15 @@ namespace Enrollment.Application.Controllers
 
         [HttpGet]
         [Authorize(Policy = "Privileged")]
-        [Route("enrollment/getListOfAdmissions")]
+        [Route("getListOfAdmissions")]
         public async Task<ActionResult<AdmissionWithPaginationInfo>> GetListOfAdmissionsWithPaginationFilteringAndSorting([FromQuery] AdmissionsFilterQuery query)
         {
             return await _enrollmentService.GetListOfAdmissionsWithPaginationFilteringAndSorting(query);
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpGet]
-        [Route("enrollment/getMyAdmissions")]
+        [Route("getMyAdmissions")]
         public async Task<ActionResult<List<AdmissionDTO>>> GetMyPrograms()
         {
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
@@ -80,7 +80,7 @@ namespace Enrollment.Application.Controllers
 
         [Authorize]
         [HttpPost]
-        [Route("enrollment/addProgramToMyList/{id}")]
+        [Route("addProgramToMyList/{id}")]
         public async Task<ActionResult<Response>> AddProgramToApplicantList([FromRoute][Required] Guid id)
         {
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
@@ -92,7 +92,7 @@ namespace Enrollment.Application.Controllers
 
         [Authorize]
         [HttpPut]
-        [Route("enrollment/changeProgramPriority/{id}")]
+        [Route("changeProgramPriority/{id}")]
         public async Task<ActionResult<Response>> ChangeProgramPriority([FromBody] int priority, [FromRoute][Required] Guid id)
         {
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
@@ -104,7 +104,7 @@ namespace Enrollment.Application.Controllers
 
         [HttpDelete]
         [Authorize]
-        [Route("enrollment/removeProgramFromMyList/{id}")]
+        [Route("removeProgramFromMyList/{id}")]
         public async Task<ActionResult<Response>> RemoveProgramFromApplicantList([FromRoute][Required] Guid id)
         {
             var userEmailClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;

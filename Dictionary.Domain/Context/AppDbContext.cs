@@ -1,6 +1,5 @@
 ﻿using Dictionary.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using static MassTransit.MessageHeaders;
 
 namespace Dictionary.Domain.Context
 {
