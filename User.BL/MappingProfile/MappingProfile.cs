@@ -27,6 +27,7 @@ namespace User.BL.MappingProfile
             CreateMap<UserRegisterDTO, UserE>();
             CreateMap<ApplicantRegisterDTO, UserE>();
             CreateMap<ApplicantRegisterDTO, Applicant>();
+            CreateMap<Manager, ManagerDTO>();
         }
     }
 }

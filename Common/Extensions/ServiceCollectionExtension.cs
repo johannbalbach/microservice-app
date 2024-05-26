@@ -115,31 +115,33 @@ namespace Common.Extensions
                 options.AddPolicy(RoleEnum.Manager.ToString(), policy => policy.RequireClaim("UserRole", RoleEnum.Manager.ToString()));
                 options.AddPolicy(RoleEnum.MainManager.ToString(), policy => policy.RequireClaim("UserRole", RoleEnum.MainManager.ToString()));
                 options.AddPolicy(RoleEnum.Admin.ToString(), policy => policy.RequireClaim("UserRole", RoleEnum.Admin.ToString()));
-                options.AddPolicy("ApplicantOrManager", p =>
+
+                options.AddPolicy("ApplicantOrManager", policy =>
                 {
-                    p.RequireAssertion(context =>
+                    policy.RequireAssertion(context =>
                     {
-                        return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.Applicant.ToString())
-                        || (claim.Type == "UserRole" && claim.Value == RoleEnum.Manager.ToString())
-                        );
+                        return context.User.HasClaim(claim => claim.Type == "UserRole" &&
+                               (claim.Value == RoleEnum.Applicant.ToString() || claim.Value == RoleEnum.Manager.ToString()));
                     });
                 });
-                options.AddPolicy("MainManagerOrAdmin", p =>
+
+                options.AddPolicy("MainManagerOrAdmin", policy =>
                 {
-                    p.RequireAssertion(context =>
+                    policy.RequireAssertion(context =>
                     {
-                        return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.MainManager.ToString()
-                        || (claim.Type == "UserRole" && claim.Value == RoleEnum.Admin.ToString()))
-                        );
+                        return context.User.HasClaim(claim => claim.Type == "UserRole" &&
+                               (claim.Value == RoleEnum.MainManager.ToString() || claim.Value == RoleEnum.Admin.ToString()));
                     });
                 });
-                options.AddPolicy("Privileged", p =>
+
+                options.AddPolicy("Privileged", policy =>
                 {
-                    p.RequireAssertion(context =>
+                    policy.RequireAssertion(context =>
                     {
-                        return context.User.HasClaim(claim => (claim.Type == "UserRole" && claim.Value == RoleEnum.Manager.ToString())
-                        || (claim.Type == "UserRole" && claim.Value == RoleEnum.MainManager.ToString() || (claim.Type == "UserRole" && claim.Value == RoleEnum.Admin.ToString()))
-                        );
+                        return context.User.HasClaim(claim => claim.Type == "UserRole" &&
+                               (claim.Value == RoleEnum.Manager.ToString() ||
+                                claim.Value == RoleEnum.MainManager.ToString() ||
+                                claim.Value == RoleEnum.Admin.ToString()));
                     });
                 });
             });

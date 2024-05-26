@@ -107,7 +107,10 @@ namespace Dictionary.BL.Services
         public async Task<bool> IsDocumentTypeSameToProgam(Guid ProgramId, List<Guid> DocumentTypeIds)
         {
             List<DocumentType> docs = new List<DocumentType>();
-            DocumentTypeIds.ForEach(async d => docs.Add(await _documentTypeRepository.GetByIdAsync(d)));
+            foreach (var docId in DocumentTypeIds)
+            {
+                docs.Add(await _documentTypeRepository.GetByIdAsync(docId));
+            }
             if (docs == null)
                 throw new NotFoundException("DocumentType with that guid doesnt exist");
 

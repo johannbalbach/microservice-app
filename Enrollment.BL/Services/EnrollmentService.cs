@@ -11,6 +11,7 @@ using Shared.DTO.ServiceBusDTO;
 using Shared.Enums;
 using Shared.Exceptions;
 using Shared.Interfaces;
+using Shared.Models;
 using Shared.Models.DTO;
 using Shared.Models.Enums;
 using System;
@@ -73,7 +74,10 @@ namespace Enrollment.BL.Services
             if (existAdmissions == null)
                 throw new BadRequestException("this user have no admissions");
 
-            existAdmissions.ForEach(async a => await AssignManagerToAdmission(a.Id, managerId));
+            foreach(var adm in existAdmissions)
+            {
+                await AssignManagerToAdmission(adm.Id, managerId);
+            }
 
             return new Response("manager successfully assigned to all admissions of this applicant");
         }
@@ -84,8 +88,9 @@ namespace Enrollment.BL.Services
 
             if (existAdmission == null)
                 throw new BadRequestException("this admission doesnt exist");
-            if (existAdmission.ManagerId != user.Id || user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin))
-                throw new BadRequestException("you havent enough rights to edit this admission");
+            if (!(user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin)))
+                if (existAdmission.ManagerId != user.Id)
+                    throw new BadRequestException("you havent enough rights to edit this admission");
 
             existAdmission.Status = body;
             await _context.SaveChangesAsync();
@@ -180,7 +185,8 @@ namespace Enrollment.BL.Services
                 if (!await IsSameLevelForAllPrograms(userAdmissions, id))
                     throw new BadRequestException("All selected programs must belong to the same level of education");
 
-            await IsValidProgramLevelForEducationDocument(user.Id, id);
+            if (!await IsValidProgramLevelForEducationDocument(user.Id, id))
+                throw new BadRequestException("Your Education Document not allow you to have this level program");
 
             var admission = new Admission{
                 Id = Guid.NewGuid(),
@@ -209,8 +215,9 @@ namespace Enrollment.BL.Services
                 throw new BadRequestException("priority should be < then max admissions count");
             if (existAdmission == null)
                 throw new BadRequestException("this admission doesnt exist");
-            if (existAdmission.ManagerId != user.Id || user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin) || existAdmission.ApplicantId != user.Id)
-                throw new BadRequestException("you havent enough rights to edit this admission");
+            if (!(user.Roles.Contains(RoleEnum.MainManager) || user.Roles.Contains(RoleEnum.Admin)))
+                if (existAdmission.ManagerId != user.Id || existAdmission.ApplicantId != user.Id)
+                    throw new BadRequestException("you havent enough rights to edit this admission");
 
             existAdmission.Priority = priority;
 
@@ -256,7 +263,7 @@ namespace Enrollment.BL.Services
             return new Response("Admission successfully removed");
         }
 
-        private async Task IsValidProgramLevelForEducationDocument(Guid applicantId, Guid programId)
+        private async Task<bool> IsValidProgramLevelForEducationDocument(Guid applicantId, Guid programId)
         {
             var educationDocumentType = await _getDocumentType.GetResponse<EducationDocumentType>(new GetEducationDocumentType { ApplicantId = applicantId });
             
@@ -264,9 +271,9 @@ namespace Enrollment.BL.Services
             {
                 var response = await _getDocumentLevel.GetResponse<DocTypeEducationLevelBelongs>(new GetDocTypeEducationLevelBelongs { DocumentTypeIds = educationDocumentType.Message.DocumentTypeIds, ProgramId = programId });
 
-                if (!response.Message.IsBelongs)
-                    throw new BadRequestException("Your Education Document not allow you to have this level program");
+                return response.Message.IsBelongs;
             }
+            return true;
         }
 
         private async Task<bool> IsSameLevelForAllPrograms(List<Admission> admissions, Guid programId)

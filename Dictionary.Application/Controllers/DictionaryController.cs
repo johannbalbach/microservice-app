@@ -23,7 +23,7 @@ namespace Dictionary.Application.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Policy = "Admin")]
+        [Authorize(Policy = "Admin")]
         public async Task<ActionResult<Response<string>>> ImportDictionary([FromQuery]ImportTypeEnum importType1, int page, int size)
         {
             return await _dictionaryService.ImportDictionary(new ImportDictionaryQuery { ImportType = importType1, Page = page, Size = size });
@@ -31,26 +31,26 @@ namespace Dictionary.Application.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<List<FacultyDTO>>> GetFaculties()
         {
             return await _dictionaryService.GetFaculties();
         }
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<List<EducationLevelDTO>>> GetEducationLevels()
         {
             return await _dictionaryService.GetEducationLevels();
         }
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<List<DocumentTypeDTO>>> GetEducationDocuments()
         {
             return await _dictionaryService.GetEducationDocuments();
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         public async Task<ActionResult<ProgramWithPaginationInfo>> GetListOfProgramsWithPaginationAndFiltering([FromQuery] ProgramsFilterQuery query)
         {
             return await _dictionaryService.GetListOfProgramsWithPaginationAndFiltering(query);

@@ -11,24 +11,28 @@ namespace User.BL.Services
 {
     public class TokenService : ITokenService
     {
-        public static ClaimsIdentity GetClaimsIdentity(string email, RoleEnum userRole)
+        public static ClaimsIdentity GetClaimsIdentity(string email, List<RoleEnum> userRoles)
         {
-            return new ClaimsIdentity(new[]
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim("UserRole", userRole.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            });
+            };
+
+            // Добавление каждой роли как отдельного claim
+            claims.AddRange(userRoles.Select(role => new Claim("UserRole", role.ToString())));
+
+            return new ClaimsIdentity(claims);
         }
 
-        public async Task<string> GenerateAccessToken(string email, RoleEnum role = RoleEnum.Applicant)
+        public async Task<string> GenerateAccessToken(string email, List<RoleEnum> roles)
         {
             var secretKey = JWTConfiguration.GetSymmetricSecurityKey();
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
             var tokeOptions = new SecurityTokenDescriptor
             {
-                Subject = GetClaimsIdentity(email, role),
+                Subject = GetClaimsIdentity(email, roles),
                 Issuer = JWTConfiguration.Issuer,
                 Audience = JWTConfiguration.Audience,
                 Expires = DateTime.UtcNow.AddMinutes(JWTConfiguration.AccessLifeTime),
@@ -71,11 +75,11 @@ namespace User.BL.Services
                 throw new SecurityTokenException("Invalid token");
             return principal;
         }
-        public async Task<(string accessToken, string refreshToken)> GenerateTokens(string email, RoleEnum role = RoleEnum.Applicant)
+/*        public async Task<(string accessToken, string refreshToken)> GenerateTokens(string email, RoleEnum role = RoleEnum.Applicant)
         {
             var accessToken = await GenerateAccessToken(email, role);
             var refreshToken = await GenerateRefreshToken();
             return (accessToken, refreshToken);
-        }
+        }*/
     }
 }

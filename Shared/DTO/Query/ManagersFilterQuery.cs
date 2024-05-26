@@ -1,11 +1,16 @@
-﻿namespace Shared.DTO.Query
+﻿using Shared.Models.Enums;
+using System.ComponentModel.DataAnnotations;
+
+namespace Shared.DTO.Query
 {
     public class ManagersFilterQuery
     {
-        public string Type { get; set; }
+        public RoleEnum? Type { get; set; }
         public Guid? FacultyId { get; set; }
-        public Guid? ApplicantId { get; set; }
-        public string Search { get; set; }
-        public string SortBy { get; set; }
+        public string? Search { get; set; }
+        [Range(1, 1000)]
+        public int pageSize { get; set; } = 10;
+        [Range(1, 1000)]
+        public int page { get; set; } = 1;
     }
 }

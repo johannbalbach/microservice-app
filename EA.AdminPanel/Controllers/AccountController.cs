@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
 using Shared.JWT;
-using System.Web.Http.ModelBinding;
 
 namespace EA.AdminPanel.Controllers
 {

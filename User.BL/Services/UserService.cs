@@ -83,9 +83,7 @@ namespace User.BL.Services
                 await _context.SaveChangesAsync();  
             }
 
-            var role = user.Roles.Contains(RoleEnum.Manager) ? RoleEnum.Manager : RoleEnum.Applicant;
-
-            var accessToken = await _tokenService.GenerateAccessToken(login.Email, role);
+            var accessToken = await _tokenService.GenerateAccessToken(login.Email, user.Roles);
             var refreshToken = await _tokenService.GenerateRefreshToken();
 
             await _context.UserTokens.AddAsync(new Token { 
@@ -153,6 +151,9 @@ namespace User.BL.Services
 
             var applicant = _mapper.Map<Applicant>(body);
             applicant.User = user;
+            applicant.BirthDate = body.BirthDate;
+            applicant.PhoneNumber = body.PhoneNumber;
+            applicant.Citizenship = body.Citizenship;
             applicant.Id = user.Id;
 
             if (await _IsUserInDb(user))
@@ -214,7 +215,7 @@ namespace User.BL.Services
             if (user == null)
                 throw new NotFoundException("user who have this token not found");
 
-            var accessToken = await _tokenService.GenerateAccessToken(user.Email, user.Roles.First());
+            var accessToken = await _tokenService.GenerateAccessToken(user.Email, user.Roles);
 
             token.AccessToken = accessToken;
             _context.SaveChanges();
@@ -256,8 +257,10 @@ namespace User.BL.Services
                 throw new NotFoundException("Faculty with that guid not found");
             }
             
-            var user = _mapper.Map<UserE>(body);
+            var user = new UserE();
             user.Id = Guid.NewGuid();
+            user.Email = body.Email;
+            user.FullName = body.FullName;
             user.NormalizedEmail = body.Email.Normalize();
             user.Password = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body.Password)));
             user.Roles.Add(RoleEnum.Manager);
@@ -298,7 +301,7 @@ namespace User.BL.Services
             if (applicant == null)
                 throw new NotFoundException("Applicant not found");
 
-            applicant.User.FullName = body.FullName;
+            user.FullName = body.FullName;
             applicant.BirthDate = body.BirthDate;
             applicant.Gender = body.Gender;
             applicant.Citizenship = body.Citizenship;
@@ -387,19 +390,15 @@ namespace User.BL.Services
         {
             var managersQuery = _context.Managers.AsQueryable();
 
-            if (!string.IsNullOrEmpty(query.Type))
+            if (query.Type != null)
             {
-                // Implement filtering by Type if necessary
+                //var user = await _context.Users.FirstOrDefaultAsync(u => u.Roles.Contains(RoleEnum.Manager) && u.Roles.Contains((RoleEnum)query.Type));
+                managersQuery = managersQuery.Where(m => m.User.Roles.Contains((RoleEnum)query.Type));
             }
 
             if (query.FacultyId.HasValue)
             {
-                //managersQuery = managersQuery.Where(m => m.FacultyId == query.FacultyId);
-            }
-
-            if (query.ApplicantId.HasValue)
-            {
-                // Implement filtering by ApplicantId if necessary
+                managersQuery = managersQuery.Where(m => m.FacultyId == query.FacultyId);
             }
 
             if (!string.IsNullOrEmpty(query.Search))
@@ -407,21 +406,27 @@ namespace User.BL.Services
                 managersQuery = managersQuery.Where(m => m.User.FullName.Contains(query.Search));
             }
 
-            // Implement sorting logic if necessary
-            if (!string.IsNullOrEmpty(query.SortBy))
+            var managersList = await managersQuery.Skip((query.page - 1) * query.pageSize).Take(query.pageSize).ToListAsync();
+
+            List<ManagerDTO> managersDtos = new List<ManagerDTO>();
+            foreach (var man in managersList)
             {
-                // Implement sorting logic based on query.SortBy
+                var manDto = _mapper.Map<ManagerDTO>(man);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == man.Id);
+
+                manDto.FullName = user.FullName;
+                manDto.Email = user.Email;
+                manDto.Roles = user.Roles;
+                managersDtos.Add(manDto);
             }
 
-            var managersList = await managersQuery.ToListAsync();
-
-            throw new NotImplementedException();
-
-/*            return new ManagerWithPaginationInfo
+            return new ManagerWithPaginationInfo
             {
-                Managers = _mapper.Map<List<ManagerProfileDTO>>(managersList),
-                TotalCount = managersList.Count
-            };*/
+                managers = managersDtos,
+                size = query.pageSize,
+                pageCurrent = query.page,
+                elementsCount = await managersQuery.CountAsync(),
+            };
         }
         public async Task<ActionResult<Response>> CheckToken(string token)
         {
